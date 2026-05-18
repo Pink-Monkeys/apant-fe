@@ -15,3 +15,16 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
     body: payload,
   })
 }
+
+export async function refreshToken(): Promise<AuthResponse> {
+  return request<AuthResponse>(ENDPOINTS.auth.refresh, {
+    method: 'POST',
+  })
+}
+
+export async function logout(): Promise<AuthResponse> {
+  return request<AuthResponse>(ENDPOINTS.auth.logout, {
+    method: 'POST',
+    body: {},
+  })
+}

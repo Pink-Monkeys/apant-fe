@@ -11,6 +11,22 @@ type RequestOptions = {
   credentials?: RequestCredentials
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split('=')
+    if (key === name) {
+      return decodeURIComponent(rest.join('='))
+    }
+  }
+
+  return null
+}
+
 function createHttpError(status: number, data: unknown, fallbackMessage: string): HttpError {
   const message = getErrorMessage(data, fallbackMessage)
   const error = new Error(message) as HttpError
@@ -21,12 +37,19 @@ function createHttpError(status: number, data: unknown, fallbackMessage: string)
 
 export async function request<T = unknown>(
   path: string,
-  { method = 'GET', body, headers, signal, credentials = 'omit' }: RequestOptions = {}
+  { method = 'GET', body, headers, signal, credentials = 'include' }: RequestOptions = {}
 ): Promise<T> {
   const url = new URL(path, API_BASE_URL).toString()
   const resolvedHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     ...headers,
+  }
+
+  if (method !== 'GET') {
+    const csrfToken = readCookie('apant_csrf')
+    if (csrfToken && !('X-CSRF-Token' in resolvedHeaders)) {
+      ;(resolvedHeaders as Record<string, string>)['X-CSRF-Token'] = csrfToken
+    }
   }
 
   const response = await fetch(url, {

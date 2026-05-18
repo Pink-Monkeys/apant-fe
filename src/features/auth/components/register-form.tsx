@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -10,6 +10,7 @@ import { cn } from '#/lib/utils'
 import { register } from '#/features/auth/api/auth-api'
 import { registerFormSchema } from '#/features/auth/schemas/auth-schema'
 import type { AuthResponse, RegisterPayload } from '#/features/auth/types'
+import { setAuthSession } from '#/features/auth/session'
 import { getErrorMessage, type ApiErrorEnvelope, type HttpError } from '#/types/http'
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
@@ -23,11 +24,22 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
     password?: string
     confirmPassword?: string
   }>({})
+  const navigate = useNavigate()
   const mutation = useMutation<AuthResponse, HttpError, RegisterPayload>({
     mutationFn: register,
-    onSuccess: () => {
+    onSuccess: (response) => {
       setFieldErrors({})
-      toast.success('Registrasi berhasil')
+
+      if (response.data?.user) {
+        setAuthSession({
+          tokenType: response.data.token_type,
+          expiresIn: response.data.expires_in,
+          user: response.data.user,
+        })
+      }
+
+      toast.success(response.message ?? 'Registration successful')
+      navigate({ to: '/dashboard' })
     },
     onError: (error) => {
       const nextErrors: typeof fieldErrors = {}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -10,6 +10,7 @@ import { cn } from '#/lib/utils'
 import { login } from '#/features/auth/api/auth-api'
 import { buildLoginPayload, loginFormSchema } from '#/features/auth/schemas/auth-schema'
 import type { AuthResponse, LoginPayload } from '#/features/auth/types'
+import { setAuthSession } from '#/features/auth/session'
 import { getErrorMessage, type ApiErrorEnvelope, type HttpError } from '#/types/http'
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
@@ -19,11 +20,22 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     identifier?: string
     password?: string
   }>({})
+  const navigate = useNavigate()
   const mutation = useMutation<AuthResponse, HttpError, LoginPayload>({
     mutationFn: login,
-    onSuccess: () => {
+    onSuccess: (response) => {
       setFieldErrors({})
-      toast.success('Login berhasil')
+
+      if (response.data?.user) {
+        setAuthSession({
+          tokenType: response.data.token_type,
+          expiresIn: response.data.expires_in,
+          user: response.data.user,
+        })
+      }
+
+      toast.success(response.message ?? 'Login successful')
+      navigate({ to: '/dashboard' })
     },
     onError: (error) => {
       const nextErrors: typeof fieldErrors = {}
@@ -82,7 +94,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="identifier">Username atau email</FieldLabel>
+                <FieldLabel htmlFor="identifier">Username or email</FieldLabel>
                 <Input
                   id="identifier"
                   type="text"
