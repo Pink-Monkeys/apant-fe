@@ -3,7 +3,7 @@
 import * as React from 'react'
 
 import { NavMain } from '#/components/nav-main'
-import { NavProjects } from '#/components/nav-projects'
+// import { NavProjects } from '#/components/nav-projects'
 import { NavUser } from '#/components/nav-user'
 import { TeamSwitcher } from '#/components/team-switcher'
 import {
@@ -14,63 +14,38 @@ import {
   SidebarRail,
 } from '#/components/ui/sidebar'
 import { getAuthSession } from '#/features/auth/session'
-import {
-  BookOpen,
-  Bot,
-  ChartPie,
-  Command,
-  Crop,
-  Map,
-  Rows3,
-  Settings,
-  Terminal,
-  Waves,
-} from 'lucide-react'
+import { ClipboardList, Eye, ListChecks, ScanEye, Settings } from 'lucide-react'
 
 // This is sample data.
 const data = {
   teams: [
     {
-      name: 'Acme Inc',
-      logo: <Rows3 />,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: <Waves />,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: <Command />,
-      plan: 'Free',
+      name: 'APANT',
+      logo: <Eye />,
+      plan: 'Pentest Platform',
     },
   ],
   navMain: [
     {
-      title: 'Playground',
+      title: 'Scanner',
       url: '#',
-      icon: <Terminal />,
-      isActive: true,
+      icon: <ScanEye />,
+      // isActive: true,
       items: [
         {
-          title: 'History',
+          title: 'Dynamic',
           url: '#',
         },
         {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
+          title: 'Static',
           url: '#',
         },
       ],
     },
     {
-      title: 'Models',
+      title: 'Reports',
       url: '#',
-      icon: <Bot />,
+      icon: <ClipboardList />,
       items: [
         {
           title: 'Genesis',
@@ -87,9 +62,9 @@ const data = {
       ],
     },
     {
-      title: 'Documentation',
+      title: 'Recommendations',
       url: '#',
-      icon: <BookOpen />,
+      icon: <ListChecks />,
       items: [
         {
           title: 'Introduction',
@@ -133,23 +108,13 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: <Crop />,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: <ChartPie />,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: <Map />,
-    },
-  ],
+  // projects: [
+  //   {
+  //     name: 'Design Engineering',
+  //     url: '#',
+  //     icon: <Crop />,
+  //   },
+  // ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -166,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser
