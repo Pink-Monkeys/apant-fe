@@ -104,7 +104,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   onChange={(event) => setIdentifier(event.target.value)}
                 />
                 {fieldErrors.identifier ? (
-                  <FieldDescription className="text-red-600">
+                  <FieldDescription className="text-destructive">
                     {fieldErrors.identifier}
                   </FieldDescription>
                 ) : null}
@@ -128,7 +128,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   onChange={(event) => setPassword(event.target.value)}
                 />
                 {fieldErrors.password ? (
-                  <FieldDescription className="text-red-600">
+                  <FieldDescription className="text-destructive">
                     {fieldErrors.password}
                   </FieldDescription>
                 ) : null}

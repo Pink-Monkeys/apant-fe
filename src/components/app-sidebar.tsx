@@ -1,9 +1,8 @@
-'use client'
-
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { NavMain } from '#/components/nav-main'
-import { NavProjects } from '#/components/nav-projects'
+// import { NavProjects } from '#/components/nav-projects'
 import { NavUser } from '#/components/nav-user'
 import { TeamSwitcher } from '#/components/team-switcher'
 import {
@@ -13,64 +12,51 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '#/components/ui/sidebar'
-import { getAuthSession } from '#/features/auth/session'
+import { authSessionKey, getAuthSession } from '#/features/auth/session'
 import {
-  BookOpen,
-  Bot,
-  ChartPie,
-  Command,
+  ClipboardList,
   Crop,
-  Map,
-  Rows3,
+  Eye,
+  LayoutDashboard,
+  ListChecks,
+  ScanEye,
   Settings,
-  Terminal,
-  Waves,
 } from 'lucide-react'
 
 // This is sample data.
 const data = {
   teams: [
     {
-      name: 'Acme Inc',
-      logo: <Rows3 />,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: <Waves />,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: <Command />,
-      plan: 'Free',
+      name: 'APANT',
+      logo: <Eye />,
+      plan: 'Pentest Platform',
     },
   ],
   navMain: [
     {
-      title: 'Playground',
-      url: '#',
-      icon: <Terminal />,
-      isActive: true,
+      title: 'Dashboard',
+      url: '/dashboard',
+      icon: <LayoutDashboard />,
+    },
+    {
+      title: 'Scanner',
+      url: '',
+      icon: <ScanEye />,
       items: [
         {
-          title: 'History',
-          url: '#',
+          title: 'Dynamic',
+          url: '/scanner/dynamic',
         },
         {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
-          url: '#',
+          title: 'Static',
+          url: '/scanner/static',
         },
       ],
     },
     {
-      title: 'Models',
+      title: 'Reports',
       url: '#',
-      icon: <Bot />,
+      icon: <ClipboardList />,
       items: [
         {
           title: 'Genesis',
@@ -87,9 +73,9 @@ const data = {
       ],
     },
     {
-      title: 'Documentation',
+      title: 'Recommendations',
       url: '#',
-      icon: <BookOpen />,
+      icon: <ListChecks />,
       items: [
         {
           title: 'Introduction',
@@ -133,27 +119,23 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: <Crop />,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: <ChartPie />,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: <Map />,
-    },
-  ],
+  // projects: [
+  //   {
+  //     name: 'Design Engineering',
+  //     url: '#',
+  //     icon: <Crop />,
+  //   },
+  // ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const session = getAuthSession()
+  const { data: session } = useQuery({
+    queryKey: authSessionKey,
+    queryFn: () => getAuthSession(),
+    initialData: getAuthSession(),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  })
   const authenticatedUser = session?.user
   const userName = authenticatedUser?.username ?? authenticatedUser?.email ?? 'User'
   const userEmail = authenticatedUser?.email ?? '—'
@@ -166,7 +148,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser

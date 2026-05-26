@@ -16,9 +16,14 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
   })
 }
 
+export async function getCsrfToken(): Promise<void> {
+  await request(ENDPOINTS.auth.csrf, { method: 'GET' })
+}
+
 export async function refreshToken(): Promise<AuthResponse> {
   return request<AuthResponse>(ENDPOINTS.auth.refresh, {
     method: 'POST',
+    body: {},
   })
 }
 

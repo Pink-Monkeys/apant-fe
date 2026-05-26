@@ -4,9 +4,13 @@ export const API_BASE_URL = env.apiBaseUrl
 
 export const ENDPOINTS = {
   health: '/api/v1/health',
+  agent: {
+    loop: '/api/v1/agent/loop',
+  },
   auth: {
     login: '/api/v1/auth/login',
     register: '/api/v1/auth/register',
+    csrf: '/api/v1/auth/csrf',
     refresh: '/api/v1/auth/refresh-token',
     logout: '/api/v1/auth/logout',
   },

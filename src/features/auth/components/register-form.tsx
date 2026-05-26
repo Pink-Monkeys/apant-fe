@@ -130,7 +130,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   onChange={(event) => setUsername(event.target.value)}
                 />
                 {fieldErrors.username ? (
-                  <FieldDescription className="text-red-600">
+                  <FieldDescription className="text-destructive">
                     {fieldErrors.username}
                   </FieldDescription>
                 ) : null}
@@ -147,7 +147,9 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   onChange={(event) => setEmail(event.target.value)}
                 />
                 {fieldErrors.email ? (
-                  <FieldDescription className="text-red-600">{fieldErrors.email}</FieldDescription>
+                  <FieldDescription className="text-destructive">
+                    {fieldErrors.email}
+                  </FieldDescription>
                 ) : null}
               </Field>
               <Field>
@@ -161,7 +163,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   onChange={(event) => setPassword(event.target.value)}
                 />
                 {fieldErrors.password ? (
-                  <FieldDescription className="text-red-600">
+                  <FieldDescription className="text-destructive">
                     {fieldErrors.password}
                   </FieldDescription>
                 ) : null}
@@ -177,7 +179,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                   onChange={(event) => setConfirmPassword(event.target.value)}
                 />
                 {fieldErrors.confirmPassword ? (
-                  <FieldDescription className="text-red-600">
+                  <FieldDescription className="text-destructive">
                     {fieldErrors.confirmPassword}
                   </FieldDescription>
                 ) : null}
