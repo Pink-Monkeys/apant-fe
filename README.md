@@ -45,6 +45,14 @@ docker compose down
 - `pnpm docker:up`
 - `pnpm docker:down`
 
+## Frontend Structure
+
+See docs/FRONTEND-STRUCTURE.md for the folder layout, API endpoint placement, and security guidelines.
+
+## Environment
+
+Copy .env.example to .env.local and set VITE_API_BASE_URL.
+
 ## Security Notes
 
 - Runtime uses a non-root Nginx image (`nginxinc/nginx-unprivileged`)

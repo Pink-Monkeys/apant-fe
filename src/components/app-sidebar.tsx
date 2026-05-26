@@ -13,6 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '#/components/ui/sidebar'
+import { getAuthSession } from '#/features/auth/session'
 import {
   BookOpen,
   Bot,
@@ -28,11 +29,6 @@ import {
 
 // This is sample data.
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
   teams: [
     {
       name: 'Acme Inc',
@@ -157,6 +153,12 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const session = getAuthSession()
+  const authenticatedUser = session?.user
+  const userName = authenticatedUser?.username ?? authenticatedUser?.email ?? 'User'
+  const userEmail = authenticatedUser?.email ?? '—'
+  const userAvatar = ''
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -167,7 +169,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: userName,
+            email: userEmail,
+            avatar: userAvatar,
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

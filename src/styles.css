@@ -44,6 +44,12 @@
   --sidebar-accent-foreground: #374151;
   --sidebar-border: #d1d5db;
   --sidebar-ring: #6366f1;
+  --toast-success-bg: #f0fdf4;
+  --toast-success-text: #166534;
+  --toast-success-border: #16a34a;
+  --toast-error-bg: #fef2f2;
+  --toast-error-text: #7f1d1d;
+  --toast-error-border: #dc2626;
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif:
     'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
@@ -103,6 +109,12 @@
   --sidebar-accent-foreground: #d1d5db;
   --sidebar-border: #4b5563;
   --sidebar-ring: #818cf8;
+  --toast-success-bg: #052e16;
+  --toast-success-text: #bbf7d0;
+  --toast-success-border: #22c55e;
+  --toast-error-bg: #450a0a;
+  --toast-error-text: #fecaca;
+  --toast-error-border: #ef4444;
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif:
     'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
@@ -188,4 +200,28 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.cn-toast[data-type='success'] {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #166534 !important;
+}
+
+.dark .cn-toast[data-type='success'] {
+  background: #052e16 !important;
+  border-color: #22c55e !important;
+  color: #bbf7d0 !important;
+}
+
+.cn-toast[data-type='error'] {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  color: #7f1d1d !important;
+}
+
+.dark .cn-toast[data-type='error'] {
+  background: #450a0a !important;
+  border-color: #ef4444 !important;
+  color: #fecaca !important;
 }

@@ -1,6 +1,27 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { refreshToken } from '#/features/auth/api/auth-api'
+import { isAuthenticated, setAuthSession } from '#/features/auth/session'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_auth')({
+  beforeLoad: async () => {
+    if (isAuthenticated()) {
+      throw redirect({ to: '/dashboard' })
+    }
+
+    try {
+      const response = await refreshToken()
+      if (response.data?.user) {
+        setAuthSession({
+          tokenType: response.data.token_type,
+          expiresIn: response.data.expires_in,
+          user: response.data.user,
+        })
+        throw redirect({ to: '/dashboard' })
+      }
+    } catch {
+      // ignore and show auth pages
+    }
+  },
   component: RouteComponent,
 })
 
