@@ -33,7 +33,7 @@ function RouteComponent() {
         </>
       }
     >
-      <div>Hello "/scanner/static/"!</div>
+      <div>Scanner Static Page</div>
     </ProtectedLayout>
   )
 }
