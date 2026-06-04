@@ -1,10 +1,10 @@
 # Docker Setup (Best Practices + Secure Defaults)
 
-This project is containerized for production using a multi-stage build and an unprivileged Nginx runtime.
+This project is containerized with a Vite development target and an unprivileged Nginx runtime.
 
 ## What Is Included
 
-- `Dockerfile`: multi-stage build (`node:22-alpine` -> `nginx-unprivileged`)
+- `Dockerfile`: multi-stage build (`node:22-alpine` dev/build -> `nginx-unprivileged`)
 - `docker/nginx.conf`: SPA fallback routing + secure headers
 - `.dockerignore`: small build context, avoids leaking unnecessary files
 - `docker-compose.yml`: secure runtime defaults (`read_only`, `cap_drop`, `no-new-privileges`)
@@ -20,13 +20,13 @@ docker build -t apant-fe:latest .
 2. Run container
 
 ```bash
-docker run --rm -p 8080:8080 --name apant-fe apant-fe:latest
+docker run --rm -p 5173:5173 --name apant-fe apant-fe:latest
 ```
 
 3. Open app
 
 ```text
-http://localhost:8080
+http://localhost:5173
 ```
 
 ## Run with Compose
