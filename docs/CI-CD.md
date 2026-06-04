@@ -58,7 +58,7 @@ docker pull docker.io/<DOCKERHUB_USERNAME>/apant-fe:latest
 Example run:
 
 ```bash
-docker run --rm -p 8080:8080 docker.io/<DOCKERHUB_USERNAME>/apant-fe:latest
+docker run --rm -p 5173:5173 docker.io/<DOCKERHUB_USERNAME>/apant-fe:latest
 ```
 
 ## Security Defaults in CI
