@@ -14,4 +14,8 @@ export const ENDPOINTS = {
     refresh: '/api/v1/auth/refresh-token',
     logout: '/api/v1/auth/logout',
   },
+  reports: {
+    list: '/api/v1/reports',
+    detail: (id: string) => `/api/v1/reports/${id}`,
+  },
 } as const

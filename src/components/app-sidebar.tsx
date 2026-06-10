@@ -13,15 +13,7 @@ import {
   SidebarRail,
 } from '#/components/ui/sidebar'
 import { authSessionKey, getAuthSession } from '#/features/auth/session'
-import {
-  ClipboardList,
-  Crop,
-  Eye,
-  LayoutDashboard,
-  ListChecks,
-  ScanEye,
-  Settings,
-} from 'lucide-react'
+import { ClipboardList, Eye, LayoutDashboard, ListChecks, ScanEye, Settings } from 'lucide-react'
 
 // This is sample data.
 const data = {
@@ -59,16 +51,8 @@ const data = {
       icon: <ClipboardList />,
       items: [
         {
-          title: 'Genesis',
-          url: '#',
-        },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
+          title: 'List Reports',
+          url: '/reports',
         },
       ],
     },
