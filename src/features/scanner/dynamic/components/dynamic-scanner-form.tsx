@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { toast } from 'sonner'
 import {
@@ -23,11 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { startAgentLoop } from '#/features/scanner/dynamic/api/dynamic-scanner-api'
+import {
+  getScanTypes,
+  scanTypesQueryKey,
+  startAgentLoop,
+} from '#/features/scanner/dynamic/api/dynamic-scanner-api'
 import {
   buildAgentLoopPayload,
   dynamicScannerFormSchema,
-  scanTypeOptions,
   type DynamicScannerFormValues,
 } from '#/features/scanner/dynamic/schemas/dynamic-scanner-schema'
 import type { AgentLoopPayload, AgentLoopResponse } from '#/features/scanner/dynamic/types'
@@ -36,6 +39,19 @@ import DynamicScannerProcess from './dynamic-scanner-process'
 
 export default function DynamicScannerForm() {
   const [latestResponse, setLatestResponse] = useState<AgentLoopResponse | null>(null)
+  const [elapsedMs, setElapsedMs] = useState(0)
+
+  const {
+    data: scanTypes = [],
+    isPending: isScanTypesPending,
+    isError: isScanTypesError,
+  } = useQuery({
+    queryKey: scanTypesQueryKey,
+    queryFn: getScanTypes,
+  })
+
+  const defaultScanType = scanTypes[0]?.key
+
   const validateAddress = (value: DynamicScannerFormValues['address']) => {
     const result = dynamicScannerFormSchema.shape.address.safeParse(value)
     return result.success ? undefined : result.error.issues[0]?.message
@@ -68,8 +84,22 @@ export default function DynamicScannerForm() {
     },
   })
 
+  useEffect(() => {
+    if (!mutation.isPending) {
+      return
+    }
+
+    setElapsedMs(0)
+    const start = Date.now()
+    const intervalId = window.setInterval(() => {
+      setElapsedMs(Date.now() - start)
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [mutation.isPending])
+
   const defaultValues: DynamicScannerFormValues = {
-    address: undefined,
+    address: '',
     scanType: undefined,
     description: '',
   }
@@ -162,25 +192,33 @@ export default function DynamicScannerForm() {
                     <Field className="w-full" data-invalid={errors.length > 0}>
                       <FieldLabel htmlFor={field.name}>Scan Type</FieldLabel>
                       <Select
-                        value={field.state.value || undefined}
-                        onValueChange={(value) =>
-                          field.handleChange(value as DynamicScannerFormValues['scanType'])
-                        }
+                        value={field.state.value ?? defaultScanType}
+                        onValueChange={(value) => field.handleChange(value)}
+                        disabled={isScanTypesPending}
                       >
                         <SelectTrigger className="w-full max-w-48">
-                          <SelectValue placeholder="Select scan type" />
+                          <SelectValue
+                            placeholder={
+                              isScanTypesPending ? 'Loading scan types...' : 'Select scan type'
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Please select scan type</SelectLabel>
-                            {scanTypeOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                            {scanTypes.map((option) => (
+                              <SelectItem key={option.key} value={option.key}>
                                 {option.label}
                               </SelectItem>
                             ))}
                           </SelectGroup>
                         </SelectContent>
                       </Select>
+                      {isScanTypesError ? (
+                        <p className="text-destructive text-xs">
+                          Failed to load scan types. The default scan type will be used.
+                        </p>
+                      ) : null}
                       <FieldError errors={errors} />
                     </Field>
                   )
@@ -240,6 +278,7 @@ export default function DynamicScannerForm() {
       <DynamicScannerProcess
         response={latestResponse?.data ?? null}
         isLoading={mutation.isPending}
+        elapsedMs={elapsedMs}
       />
     </div>
   )

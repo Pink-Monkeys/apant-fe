@@ -1,7 +1,23 @@
 export type AgentLoopPayload = {
   provider: string
   model: string
+  target: string
+  description: string
+  scan_type?: string
+  max_steps: number
+}
+
+export type ScanType = {
+  key: string
+  label: string
+}
+
+export type ScanTypesResponse = {
+  data: {
+    scan_types: ScanType[]
+  }
   message: string
+  success: boolean
 }
 
 export type AgentLoopStep = {
