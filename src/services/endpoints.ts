@@ -19,4 +19,7 @@ export const ENDPOINTS = {
     list: '/api/v1/reports',
     detail: (id: string) => `/api/v1/reports/${id}`,
   },
+  scans: {
+    list: '/api/v1/scans',
+  },
 } as const

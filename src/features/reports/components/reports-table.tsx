@@ -16,6 +16,8 @@ import { DataTablePagination } from '#/components/ui/data-table-pagination'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { ReportStatsCards } from '#/features/reports/components/report-stats-cards'
+import { ReportsCharts } from '#/features/reports/components/reports-charts'
+import { ReportsSummary } from '#/features/reports/components/reports-summary'
 import type { Report } from '#/features/reports/types'
 import { Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -150,6 +152,12 @@ export function ReportsTable() {
     <div className="space-y-6">
       {/* 4 Cards Stats */}
       <ReportStatsCards reports={reports} />
+
+      {/* Charts Section */}
+      <ReportsCharts reports={reports} />
+
+      {/* Executive Summary */}
+      <ReportsSummary reports={reports} />
 
       {/* Main Table Card */}
       <Card className="border-primary border">

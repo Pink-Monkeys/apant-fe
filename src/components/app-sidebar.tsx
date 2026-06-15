@@ -36,6 +36,10 @@ const data = {
       icon: <ScanEye />,
       items: [
         {
+          title: 'Scan List',
+          url: '/scanner/list',
+        },
+        {
           title: 'Dynamic',
           url: '/scanner/dynamic',
         },

@@ -1,64 +1,45 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import type { Report } from '#/features/reports/types'
-import { FileText, ShieldAlert, AlertCircle, Award } from 'lucide-react'
+import { FileText, ShieldAlert, AlertCircle, ShieldCheck } from 'lucide-react'
 
 type ReportStatsCardsProps = {
   reports: Report[]
 }
 
 export function ReportStatsCards({ reports }: ReportStatsCardsProps) {
-  // 1. Total Reports
-  const totalReports = reports.length
+  const total = reports.length
+  const withFindings = reports.filter((r) => r.statistics.total_vulnerabilities > 0).length
+  const clean = reports.filter((r) => r.statistics.total_vulnerabilities === 0).length
+  const critical = reports.filter((r) => r.overall_severity === 'critical').length
 
-  // 2. Critical Reports
-  const criticalReports = reports.filter((r) => r.overall_severity === 'critical').length
-
-  // 3. Reports With Findings
-  const reportsWithFindings = reports.filter((r) => r.statistics.total_vulnerabilities > 0).length
-
-  // 4. Top Vulnerability
-  const vulnCounts: Record<string, number> = {}
-  reports.forEach((r) => {
-    if (r.vulnerabilities) {
-      r.vulnerabilities.forEach((v) => {
-        vulnCounts[v.type] = (vulnCounts[v.type] || 0) + 1
-      })
-    }
-  })
-
-  let topVulnerability = 'None'
-  let maxCount = 0
-  Object.entries(vulnCounts).forEach(([type, count]) => {
-    if (count > maxCount) {
-      maxCount = count
-      topVulnerability = type
-    }
-  })
+  const withFindingsPct = total > 0 ? Math.round((withFindings / total) * 100) : 0
+  const cleanPct = total > 0 ? Math.round((clean / total) * 100) : 0
+  const criticalPct = total > 0 ? Math.round((critical / total) * 100) : 0
 
   const stats = [
     {
       label: 'Total Reports',
-      value: String(totalReports),
-      desc: 'Total pentest campaigns logged',
+      value: `${total} Report${total !== 1 ? 's' : ''}`,
+      desc: total > 0 ? '100% completed scans' : 'No scans completed',
       icon: <FileText className="text-muted-foreground size-4" />,
     },
     {
-      label: 'Critical Reports',
-      value: String(criticalReports),
-      desc: 'Requires immediate remediation',
-      icon: <ShieldAlert className="text-destructive size-4" />,
-    },
-    {
       label: 'Reports With Findings',
-      value: String(reportsWithFindings),
-      desc: 'Scans with verified vulnerabilities',
+      value: `${withFindings} Report${withFindings !== 1 ? 's' : ''}`,
+      desc: `${withFindingsPct}% of all scans`,
       icon: <AlertCircle className="size-4 text-orange-500" />,
     },
     {
-      label: 'Top Vulnerability',
-      value: topVulnerability,
-      desc: maxCount > 0 ? `${maxCount} occurrences found` : 'No vulnerabilities found',
-      icon: <Award className="text-primary size-4" />,
+      label: 'Clean Reports',
+      value: `${clean} Clean Report${clean !== 1 ? 's' : ''}`,
+      desc: `${cleanPct}% secure targets`,
+      icon: <ShieldCheck className="size-4 text-green-500" />,
+    },
+    {
+      label: 'Critical Reports',
+      value: `${critical} Critical Report${critical !== 1 ? 's' : ''}`,
+      desc: `${criticalPct}% high-risk targets`,
+      icon: <ShieldAlert className="text-destructive size-4" />,
     },
   ]
 
@@ -76,7 +57,10 @@ export function ReportStatsCards({ reports }: ReportStatsCardsProps) {
             <p className="truncate text-xl font-bold tracking-tight" title={item.value}>
               {item.value}
             </p>
-            <CardDescription className="mt-1 truncate text-xs" title={item.desc}>
+            <CardDescription
+              className="text-foreground/80 mt-1 truncate text-xs font-semibold"
+              title={item.desc}
+            >
               {item.desc}
             </CardDescription>
           </CardContent>
