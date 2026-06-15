@@ -75,7 +75,7 @@ export function ReportsCharts({ reports }: ReportsChartsProps) {
     {
       name: 'At-Risk Targets',
       value: withFindings,
-      color: severityStyles.High.hex,
+      color: severityStyles.Critical.hex,
     },
   ].filter((item) => item.value > 0)
 
