@@ -28,11 +28,23 @@ export type AgentLoopStep = {
   summary?: string
 }
 
+export type AgentTargetInfo = {
+  address: string
+  operating_system: string
+  status: string
+  cdn: string
+  ip: string
+  title: string
+  status_code: number
+}
+
 export type AgentLoopData = {
   session_id: string
+  scan_id?: string
   steps: AgentLoopStep[]
   final_answer: string
   total_steps: number
+  target_info?: AgentTargetInfo
 }
 
 export type AgentLoopResponse = {
