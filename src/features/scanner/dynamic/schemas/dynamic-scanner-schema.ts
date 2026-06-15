@@ -1,26 +1,13 @@
 import { z } from 'zod'
 import type { AgentLoopPayload } from '#/features/scanner/dynamic/types'
 
-const scanTypeValues = ['quick', 'full', 'custom'] as const
-
-export const scanTypeOptions = [
-  { value: scanTypeValues[0], label: 'Quick scan' },
-  { value: scanTypeValues[1], label: 'Full scan' },
-  { value: scanTypeValues[2], label: 'Custom' },
-] as const
-
-const optionalUrl = z.preprocess(
-  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
-  z.string().url('Invalid URL').optional()
-)
-
 const optionalScanType = z.preprocess(
   (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
-  z.enum(scanTypeValues).optional()
+  z.string().optional()
 )
 
 export const dynamicScannerFormSchema = z.object({
-  address: optionalUrl,
+  address: z.string().trim().min(1, 'URL Address is required').url('Invalid URL'),
   scanType: optionalScanType,
   description: z.string().trim().min(1, 'Description is required'),
 })
@@ -28,9 +15,17 @@ export const dynamicScannerFormSchema = z.object({
 export type DynamicScannerFormValues = z.infer<typeof dynamicScannerFormSchema>
 
 export function buildAgentLoopPayload(values: DynamicScannerFormValues): AgentLoopPayload {
-  return {
+  const payload: AgentLoopPayload = {
     provider: 'openai',
-    model: 'gpt-4o-mini',
-    message: values.description.trim(),
+    model: 'gpt-5.4',
+    target: values.address.trim(),
+    description: values.description.trim(),
+    max_steps: 15,
   }
+
+  if (values.scanType) {
+    payload.scan_type = values.scanType
+  }
+
+  return payload
 }

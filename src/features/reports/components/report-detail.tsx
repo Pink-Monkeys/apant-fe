@@ -80,7 +80,6 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
 
   return (
     <div className="space-y-6">
-      {/* Back + Header */}
       <div className="flex items-start gap-4">
         <Button variant="outline" size="sm" asChild className="mt-0.5 shrink-0">
           <Link to="/reports">
@@ -88,17 +87,17 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
             Back
           </Link>
         </Button>
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold">
-              {shortId}
-            </span>
-            <Badge className={cn('border-transparent font-semibold', overallSeverityStyle.badge)}>
-              {severityKey} Severity
-            </Badge>
-          </div>
-          <h1 className="text-xl leading-snug font-bold tracking-tight">{report.title}</h1>
+      </div>
+      <div className="mt-10 min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold">
+            {shortId}
+          </span>
+          <Badge className={cn('border-transparent font-semibold', overallSeverityStyle.badge)}>
+            {severityKey} Severity
+          </Badge>
         </div>
+        <h1 className="text-xl leading-snug font-bold tracking-tight">{report.title}</h1>
       </div>
 
       {/* Meta Grid */}

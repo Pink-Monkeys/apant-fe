@@ -16,13 +16,19 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Loader2 } from 'lucide-react'
 
 type DynamicScannerProcessProps = {
   response?: AgentLoopData | null
   isLoading?: boolean
+  elapsedMs?: number
 }
 
-export default function DynamicScannerProcess({ response, isLoading }: DynamicScannerProcessProps) {
+export default function DynamicScannerProcess({
+  response,
+  isLoading,
+  elapsedMs = 0,
+}: DynamicScannerProcessProps) {
   const stepsToShow = response?.steps.slice(0, 10) ?? []
   const hasMoreSteps = response ? response.steps.length > stepsToShow.length : false
   const finalAnswerText = response ? toPlainText(response.final_answer) : ''
@@ -61,13 +67,21 @@ export default function DynamicScannerProcess({ response, isLoading }: DynamicSc
           className="border-primary flex flex-col flex-wrap gap-4 border p-4"
         >
           {isLoading ? (
-            <Card>
+            <Card className="border-primary">
               <CardHeader>
-                <CardTitle>Scan in progress</CardTitle>
-                <CardDescription>Waiting for the agent loop response.</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Loader2 className="text-primary size-4 animate-spin" />
+                  Scan in progress
+                </CardTitle>
+                <CardDescription>
+                  The agent is scanning the target. This may take several minutes.
+                </CardDescription>
               </CardHeader>
               <CardContent className="text-muted-foreground text-sm">
-                The results will appear here once the scan completes.
+                Elapsed time:{' '}
+                <span className="text-foreground font-mono font-semibold">
+                  {formatDuration(elapsedMs)}
+                </span>
               </CardContent>
             </Card>
           ) : null}
@@ -308,6 +322,13 @@ export default function DynamicScannerProcess({ response, isLoading }: DynamicSc
       </Tabs>
     </div>
   )
+}
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 function toPlainText(value: string): string {

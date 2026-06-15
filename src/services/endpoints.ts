@@ -4,6 +4,7 @@ export const API_BASE_URL = env.apiBaseUrl
 
 export const ENDPOINTS = {
   health: '/api/v1/health',
+  scanTypes: '/api/v1/scan-types',
   agent: {
     loop: '/api/v1/agent/loop',
   },

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
 import {
@@ -15,18 +16,16 @@ import { DataTablePagination } from '#/components/ui/data-table-pagination'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { ReportStatsCards } from '#/features/reports/components/report-stats-cards'
-import { ReportDetailsSheet } from '#/features/reports/components/report-details-sheet'
 import type { Report } from '#/features/reports/types'
 import { Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function ReportsTable() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 })
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
 
   // Fetch Reports list
   const {
@@ -77,8 +76,7 @@ export function ReportsTable() {
 
   // View Detail helper
   const handleViewDetail = (report: Report) => {
-    setSelectedReport(report)
-    setIsSheetOpen(true)
+    navigate({ to: '/reports/$reportId', params: { reportId: report.id } })
   }
 
   // Delete helper
@@ -179,18 +177,6 @@ export function ReportsTable() {
           <DataTablePagination table={table} />
         </CardContent>
       </Card>
-
-      {/* Slide-out details panel */}
-      {selectedReport && (
-        <ReportDetailsSheet
-          report={selectedReport}
-          isOpen={isSheetOpen}
-          onClose={() => {
-            setIsSheetOpen(false)
-            setSelectedReport(null)
-          }}
-        />
-      )}
     </div>
   )
 }
