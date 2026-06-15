@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import type { Report } from '#/features/reports/types'
+import { severityStyles } from '#/lib/severity'
 import { cn } from '#/lib/utils'
 
 type ReportsChartsProps = {
@@ -22,16 +23,20 @@ export function ReportsCharts({ reports }: ReportsChartsProps) {
 
   // Determine Risk Level text and style
   let riskLevel = 'Minimal'
-  let riskColor = 'text-green-500'
-  if (securityScore < 50) {
+  let riskColor = 'text-emerald-600 font-bold'
+
+  if (securityScore < 25) {
+    riskLevel = 'Critical'
+    riskColor = `${severityStyles.Critical.text} font-bold`
+  } else if (securityScore < 50) {
     riskLevel = 'High'
-    riskColor = 'text-destructive font-bold'
+    riskColor = `${severityStyles.High.text} font-bold`
   } else if (securityScore < 80) {
     riskLevel = 'Medium'
-    riskColor = 'text-orange-500 font-bold'
+    riskColor = `${severityStyles.Medium.text} font-bold`
   } else if (securityScore < 100) {
     riskLevel = 'Low'
-    riskColor = 'text-blue-500 font-bold'
+    riskColor = `${severityStyles.Low.text} font-bold`
   }
 
   // 3. Aggregate Vulnerabilities by Severity
@@ -62,29 +67,60 @@ export function ReportsCharts({ reports }: ReportsChartsProps) {
 
   // Donut chart data
   const donutData = [
-    { name: 'Secure Targets', value: clean, color: '#10b981' }, // emerald-500
-    { name: 'At-Risk Targets', value: withFindings, color: '#ef4444' }, // red-500
+    {
+      name: 'Secure Targets',
+      value: clean,
+      color: severityStyles.Low.hex,
+    },
+    {
+      name: 'At-Risk Targets',
+      value: withFindings,
+      color: severityStyles.High.hex,
+    },
   ].filter((item) => item.value > 0)
 
   // In case all values are zero, provide a default layout
   const chartData =
-    donutData.length > 0 ? donutData : [{ name: 'No Data', value: 1, color: '#9ca3af' }]
+    donutData.length > 0
+      ? donutData
+      : [
+          {
+            name: 'No Data',
+            value: 1,
+            color: severityStyles.Informational.hex,
+          },
+        ]
 
   const severityLevels = [
     {
       key: 'critical',
       label: 'Critical',
-      color: 'bg-purple-700',
-      text: 'text-purple-700 dark:text-purple-400',
+      color: severityStyles.Critical.bg,
+      text: severityStyles.Critical.text,
     },
-    { key: 'high', label: 'High', color: 'bg-destructive', text: 'text-destructive' },
-    { key: 'medium', label: 'Medium', color: 'bg-orange-500', text: 'text-orange-500' },
-    { key: 'low', label: 'Low', color: 'bg-blue-500', text: 'text-blue-500' },
+    {
+      key: 'high',
+      label: 'High',
+      color: severityStyles.High.bg,
+      text: severityStyles.High.text,
+    },
+    {
+      key: 'medium',
+      label: 'Medium',
+      color: severityStyles.Medium.bg,
+      text: severityStyles.Medium.text,
+    },
+    {
+      key: 'low',
+      label: 'Low',
+      color: severityStyles.Low.bg,
+      text: severityStyles.Low.text,
+    },
     {
       key: 'informational',
       label: 'Informational',
-      color: 'bg-gray-500',
-      text: 'text-muted-foreground',
+      color: severityStyles.Informational.bg,
+      text: severityStyles.Informational.text,
     },
   ] as const
 
