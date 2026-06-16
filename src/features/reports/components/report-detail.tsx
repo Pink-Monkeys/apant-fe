@@ -325,6 +325,15 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
         )}
       </Section>
 
+      {/* Mitigation */}
+      {report.mitigation && (
+        <Section icon={<Shield className="size-4" />} title="Mitigation & Remediation">
+          <p className="border-primary/30 bg-primary/5 border-l-4 p-4 text-sm leading-relaxed">
+            {report.mitigation}
+          </p>
+        </Section>
+      )}
+
       {/* Conclusion */}
       {report.conclusion && (
         <Section icon={<ShieldCheck className="size-4" />} title="Conclusion">

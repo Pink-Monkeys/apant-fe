@@ -114,7 +114,7 @@ export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Re
     cell: ({ row }) => {
       const target = row.original.metadata.target
       return (
-        <span className="block max-w-[150px] truncate text-xs font-medium" title={target}>
+        <span className="block max-w-37.5 truncate text-xs font-medium" title={target}>
           {target}
         </span>
       )
