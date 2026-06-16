@@ -4,7 +4,9 @@ import { Link } from '@tanstack/react-router'
 import { getReportDetail, reportsQueryKeys } from '#/features/reports/api/reports-api'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { severityStyles } from '#/lib/severity'
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import {
   Shield,
   ShieldCheck,
@@ -136,6 +138,14 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
             {report.executive_summary}
           </p>
         </Section>
+      )}
+
+      {/* Vulnerability Distribution */}
+      {report.statistics && report.statistics.by_severity && (
+        <VulnerabilityDistribution
+          bySeverity={report.statistics.by_severity}
+          total={report.statistics.total_vulnerabilities}
+        />
       )}
 
       {/* Target Info + Attack Surface */}
@@ -327,7 +337,167 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
   )
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// Sub-components
+
+type VulnerabilityDistributionProps = {
+  bySeverity: {
+    critical: number
+    high: number
+    medium: number
+    low: number
+    informational: number
+  }
+  total: number
+}
+
+function VulnerabilityDistribution({ bySeverity, total }: VulnerabilityDistributionProps) {
+  const severityLevels = [
+    {
+      key: 'critical' as const,
+      label: 'Critical',
+      style: severityStyles.Critical,
+    },
+    {
+      key: 'high' as const,
+      label: 'High',
+      style: severityStyles.High,
+    },
+    {
+      key: 'medium' as const,
+      label: 'Medium',
+      style: severityStyles.Medium,
+    },
+    {
+      key: 'low' as const,
+      label: 'Low',
+      style: severityStyles.Low,
+    },
+    {
+      key: 'informational' as const,
+      label: 'Informational',
+      style: severityStyles.Informational,
+    },
+  ] as const
+
+  const donutData = severityLevels
+    .map((sev) => ({
+      name: sev.label,
+      value: bySeverity[sev.key] || 0,
+      color: sev.style.hex,
+    }))
+    .filter((d) => d.value > 0)
+
+  // If all zero, show a fallback single entry
+  const chartData =
+    donutData.length > 0
+      ? donutData
+      : [{ name: 'No Data', value: 1, color: severityStyles.Informational.hex }]
+
+  return (
+    <Section icon={<Activity className="size-4" />} title="Vulnerability Distribution">
+      <Card className="border-primary">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Severity Breakdown</CardTitle>
+          <CardDescription>
+            Discovered vulnerabilities aggregated by severity level for this report
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Donut Chart */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative flex h-44 w-full items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={75}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center total count */}
+                <div className="absolute flex flex-col items-center justify-center text-center">
+                  <span className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                    Total
+                  </span>
+                  <span className="font-mono text-2xl leading-none font-extrabold">{total}</span>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+                {severityLevels.map((sev) => {
+                  const count = bySeverity[sev.key] || 0
+                  if (count === 0) return null
+                  return (
+                    <div key={sev.key} className="flex items-center gap-1.5">
+                      <span
+                        className="size-2.5 shrink-0"
+                        style={{ backgroundColor: sev.style.hex }}
+                      />
+                      <span className="text-muted-foreground font-medium">
+                        {sev.label} ({count})
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Progress Bars */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b pb-1.5">
+                <span className="text-muted-foreground text-xs font-semibold">Severity</span>
+                <span className="text-muted-foreground text-xs font-semibold">
+                  Percentage & Count
+                </span>
+              </div>
+
+              {severityLevels.map((sev) => {
+                const count = bySeverity[sev.key] || 0
+                const pct = total > 0 ? Math.round((count / total) * 100) : 0
+
+                return (
+                  <div key={sev.key} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium">
+                      <span className={cn('font-bold tracking-wider uppercase', sev.style.text)}>
+                        {sev.label}
+                      </span>
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {pct}% <span className="font-sans text-[10px]">({count})</span>
+                      </span>
+                    </div>
+                    {/* Progress Bar Track */}
+                    <div className="bg-muted border-border h-2.5 rounded-none border">
+                      <div
+                        className={cn('h-full transition-all duration-300', sev.style.bg)}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+
+              <div className="text-muted-foreground pt-1 text-center text-xs font-medium">
+                Total Discovered Vulnerabilities:{' '}
+                <span className="text-foreground font-mono font-bold">{total}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Section>
+  )
+}
 
 function Section({
   icon,
