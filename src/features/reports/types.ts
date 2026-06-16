@@ -76,6 +76,7 @@ export type Report = {
   overall_severity: ReportSeverity
   executive_summary?: string
   conclusion?: string
+  mitigation?: string
   metadata: ReportMetadata
   target_info?: TargetInfo
   attack_surface?: AttackSurface

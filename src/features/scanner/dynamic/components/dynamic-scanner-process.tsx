@@ -198,7 +198,7 @@ export default function DynamicScannerProcess({
           {/* 4 Summary stat cards */}
           <div className="flex w-full flex-row flex-wrap gap-4">
             {/* Scan Duration */}
-            <Card className="border-primary min-w-[140px] flex-1 border">
+            <Card className="border-primary min-w-35 flex-1 border">
               <CardHeader className="pb-0">
                 <div className="text-muted-foreground flex items-center justify-between">
                   <CardTitle className="text-xs tracking-wide uppercase">Scan Duration</CardTitle>
@@ -208,13 +208,13 @@ export default function DynamicScannerProcess({
               <CardContent>
                 <p className="font-mono text-2xl font-bold">{formatDuration(elapsedMs)}</p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  {isLoading ? 'In progress…' : response ? 'Total elapsed time' : '—'}
+                  {isLoading ? 'In progress…' : response ? 'Total elapsed time' : '-'}
                 </p>
               </CardContent>
             </Card>
 
             {/* HTTP Requests */}
-            <Card className="border-primary min-w-[140px] flex-1 border">
+            <Card className="border-primary min-w-35 flex-1 border">
               <CardHeader className="pb-0">
                 <div className="text-muted-foreground flex items-center justify-between">
                   <CardTitle className="text-xs tracking-wide uppercase">Requests</CardTitle>
@@ -223,14 +223,14 @@ export default function DynamicScannerProcess({
               </CardHeader>
               <CardContent>
                 <p className="font-mono text-2xl font-bold">
-                  {httpRequestCount !== null ? httpRequestCount : '—'}
+                  {httpRequestCount !== null ? httpRequestCount : '-'}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">HTTP requests made by agent</p>
               </CardContent>
             </Card>
 
             {/* Paths/URLs crawled */}
-            <Card className="border-primary min-w-[140px] flex-1 border">
+            <Card className="border-primary min-w-35 flex-1 border">
               <CardHeader className="pb-0">
                 <div className="text-muted-foreground flex items-center justify-between">
                   <CardTitle className="text-xs tracking-wide uppercase">URLs Crawled</CardTitle>
@@ -246,7 +246,7 @@ export default function DynamicScannerProcess({
             </Card>
 
             {/* Target status */}
-            <Card className="border-primary min-w-[140px] flex-1 border">
+            <Card className="border-primary min-w-35 flex-1 border">
               <CardHeader className="pb-0">
                 <div className="text-muted-foreground flex items-center justify-between">
                   <CardTitle className="text-xs tracking-wide uppercase">Target Status</CardTitle>
@@ -288,7 +288,7 @@ export default function DynamicScannerProcess({
           {/* Target Info + Tool Activity */}
           <div className="flex w-full flex-row flex-wrap gap-4">
             {/* Target Information */}
-            <Card className="border-primary min-w-[260px] flex-1 border">
+            <Card className="border-primary min-w-65 flex-1 border">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <Server className="text-primary size-4" />
@@ -319,7 +319,7 @@ export default function DynamicScannerProcess({
             </Card>
 
             {/* Tool Activity */}
-            <Card className="border-primary min-w-[260px] flex-1 border">
+            <Card className="border-primary min-w-65 flex-1 border">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="text-primary size-4" />
@@ -430,7 +430,7 @@ export default function DynamicScannerProcess({
                 <div className="space-y-3">
                   <div className="flex items-center gap-4 text-sm">
                     <span className="text-muted-foreground">Total URLs found:</span>
-                    <span className="font-mono font-bold">{crawledCount ?? '—'}</span>
+                    <span className="font-mono font-bold">{crawledCount ?? '-'}</span>
                     {(katanaStep.result['output_truncated'] as boolean | undefined) ? (
                       <Badge variant="outline" className="text-xs">
                         Preview only
@@ -476,7 +476,7 @@ function InfoRow({ label, value, mono = false }: { label: string; value: string;
     <div className="flex items-start justify-between gap-4 text-sm">
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span className={cn('text-right break-all', mono && 'font-mono text-xs')} title={value}>
-        {value || '—'}
+        {value || '-'}
       </span>
     </div>
   )
