@@ -96,7 +96,7 @@ export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Re
       const subtitle = getDisplaySubtitle(report)
 
       return (
-        <div className="flex min-w-[200px] flex-col gap-0.5 py-1">
+        <div className="flex min-w-50 flex-col gap-0.5 py-1">
           <span
             className="text-foreground cursor-pointer text-sm leading-snug font-semibold hover:underline"
             onClick={() => callbacks.onViewDetail(report)}
