@@ -5,11 +5,11 @@ import type { Report, ReportSeverity } from '#/features/reports/types'
 // Severity colors are defined locally because the PDF renderer needs plain hex
 // values, not the Tailwind classes used by the on-screen `severityStyles`.
 const SEVERITY_COLORS: Record<ReportSeverity, { bg: string; text: string }> = {
-  critical: { bg: '#b71c1c', text: '#ffffff' },
-  high: { bg: '#e65100', text: '#ffffff' },
+  critical: { bg: '#991b1b', text: '#ffffff' },
+  high: { bg: '#dc2626', text: '#ffffff' },
   medium: { bg: '#fbc02d', text: '#1a1a1a' },
-  low: { bg: '#2e7d32', text: '#ffffff' },
-  informational: { bg: '#607d8b', text: '#ffffff' },
+  low: { bg: '#059669', text: '#ffffff' },
+  informational: { bg: '#0284c7', text: '#ffffff' },
 }
 
 function severityColor(severity: ReportSeverity) {
@@ -49,31 +49,37 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: 'Helvetica',
     color: '#1a1a1a',
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
   header: {
     marginBottom: 16,
     borderBottomWidth: 2,
     borderBottomColor: '#1a1a1a',
-    paddingBottom: 10,
+    paddingBottom: 14,
+    lineHeight: 1,
   },
   title: {
     fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 4,
+    marginBottom: 12,
   },
   generatedAt: {
     fontSize: 8,
     color: '#666666',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   badge: {
     alignSelf: 'flex-start',
-    paddingVertical: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 3,
+    borderRadius: 0,
+  },
+  badgeText: {
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
+    margin: 0,
   },
   section: {
     marginTop: 14,
@@ -99,23 +105,24 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: '#dddddd',
-    borderRadius: 3,
+    borderRadius: 0,
     padding: 8,
   },
   statValue: {
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
+    marginBottom: 6,
   },
   statLabel: {
     fontSize: 7,
     color: '#666666',
     textTransform: 'uppercase',
-    marginTop: 2,
+    marginTop: 4,
   },
   table: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    borderRadius: 3,
+    borderRadius: 0,
   },
   tableRow: {
     flexDirection: 'row',
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   vulnCard: {
     borderWidth: 1,
     borderColor: '#dddddd',
-    borderRadius: 3,
+    borderRadius: 0,
     marginBottom: 10,
     padding: 10,
   },
@@ -156,12 +163,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   verifiedBadge: {
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingVertical: 2,
     paddingHorizontal: 6,
-    borderRadius: 3,
+    borderRadius: 0,
+    backgroundColor: '#2e7d32',
+  },
+  verifiedBadgeText: {
     fontSize: 7,
     fontFamily: 'Helvetica-Bold',
-    backgroundColor: '#2e7d32',
     color: '#ffffff',
   },
   fieldLabel: {
@@ -173,7 +184,7 @@ const styles = StyleSheet.create({
   },
   pocBlock: {
     backgroundColor: '#1e1e1e',
-    borderRadius: 3,
+    borderRadius: 0,
     padding: 8,
     marginTop: 2,
   },
@@ -207,9 +218,9 @@ const styles = StyleSheet.create({
 function SeverityBadge({ severity }: { severity: ReportSeverity }) {
   const color = severityColor(severity)
   return (
-    <Text style={[styles.badge, { backgroundColor: color.bg, color: color.text }]}>
-      {titleCase(severity)}
-    </Text>
+    <View style={[styles.badge, { backgroundColor: color.bg }]}>
+      <Text style={[styles.badgeText, { color: color.text }]}>{titleCase(severity)}</Text>
+    </View>
   )
 }
 
@@ -249,17 +260,15 @@ export function ReportDocument({ report }: { report: Report }) {
         <View style={styles.header}>
           <Text style={styles.title}>{report.title}</Text>
           <Text style={styles.generatedAt}>Generated: {formatDate(report.created_at)}</Text>
-          <Text
-            style={[
-              styles.badge,
-              {
-                backgroundColor: severityColor(report.overall_severity).bg,
-                color: severityColor(report.overall_severity).text,
-              },
-            ]}
+          <View
+            style={[styles.badge, { backgroundColor: severityColor(report.overall_severity).bg }]}
           >
-            Overall Severity: {titleCase(report.overall_severity)}
-          </Text>
+            <Text
+              style={[styles.badgeText, { color: severityColor(report.overall_severity).text }]}
+            >
+              Overall Severity: {titleCase(report.overall_severity)}
+            </Text>
+          </View>
         </View>
 
         {/* Executive Summary */}
@@ -364,7 +373,11 @@ export function ReportDocument({ report }: { report: Report }) {
                     {vuln.id} - {vuln.title}
                   </Text>
                   <SeverityBadge severity={vuln.severity} />
-                  {vuln.verified ? <Text style={styles.verifiedBadge}>VERIFIED</Text> : null}
+                  {vuln.verified ? (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedBadgeText}>VERIFIED</Text>
+                    </View>
+                  ) : null}
                 </View>
 
                 <InfoTable
