@@ -3,6 +3,7 @@ export type ReportSeverity = 'critical' | 'high' | 'medium' | 'low' | 'informati
 export type ReportMetadata = {
   target: string
   description?: string
+  scan_type?: string
   scan_date: string
   duration: string
   provider: string
@@ -51,6 +52,9 @@ export type VulnerabilityPoC = {
   url: string
   payload: string
   curl_cmd: string
+  headers?: Record<string, string>
+  body?: string
+  response?: string
 }
 
 export type Vulnerability = {
@@ -64,6 +68,7 @@ export type Vulnerability = {
   poc: VulnerabilityPoC
   recommendation: string
   verified: boolean
+  cvss_score?: number
 }
 
 export type Report = {
