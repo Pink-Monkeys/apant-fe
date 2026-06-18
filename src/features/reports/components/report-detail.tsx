@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
+  Download,
 } from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { toast } from 'sonner'
@@ -30,6 +31,7 @@ type ReportDetailProps = {
 
 export function ReportDetail({ reportId }: ReportDetailProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
 
   const {
     data: report,
@@ -46,6 +48,31 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
     setCopiedId(id)
     toast.success('cURL command copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  // Generate the PDF on-demand (client-side, vector output via @react-pdf/renderer).
+  // The library is loaded lazily so it stays out of the initial route bundle.
+  const handleDownloadPdf = async () => {
+    if (!report) return
+    setIsGeneratingPdf(true)
+    try {
+      const [{ pdf }, { ReportDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('#/features/reports/components/report-pdf'),
+      ])
+      const blob = await pdf(<ReportDocument report={report} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `report-${report.id}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to generate report PDF', err)
+      toast.error('Failed to generate PDF. Please try again.')
+    } finally {
+      setIsGeneratingPdf(false)
+    }
   }
 
   if (isLoading) {
@@ -82,12 +109,30 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-4">
+      <div className="flex items-start justify-between gap-4">
         <Button variant="outline" size="sm" asChild className="mt-0.5 shrink-0">
           <Link to="/reports">
             <ArrowLeft className="size-3.5" />
             Back
           </Link>
+        </Button>
+        <Button
+          size="sm"
+          onClick={handleDownloadPdf}
+          disabled={isGeneratingPdf}
+          className="mt-0.5 shrink-0"
+        >
+          {isGeneratingPdf ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Download className="size-3.5" />
+              Download PDF
+            </>
+          )}
         </Button>
       </div>
       <div className="mt-10 min-w-0">
