@@ -68,8 +68,9 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 16,
   },
-  badge: {
-    alignSelf: 'flex-start',
+  // Shared base so every badge (overall severity, per-vuln severity, VERIFIED)
+  // has identical size. Only background/text color is overridden per badge.
+  badgeBase: {
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 4,
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
+    lineHeight: 1,
     margin: 0,
   },
   section: {
@@ -162,19 +164,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     fontSize: 10,
   },
-  verifiedBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 0,
-    backgroundColor: '#2e7d32',
-  },
-  verifiedBadgeText: {
-    fontSize: 7,
-    fontFamily: 'Helvetica-Bold',
-    color: '#ffffff',
-  },
   fieldLabel: {
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
@@ -218,7 +207,7 @@ const styles = StyleSheet.create({
 function SeverityBadge({ severity }: { severity: ReportSeverity }) {
   const color = severityColor(severity)
   return (
-    <View style={[styles.badge, { backgroundColor: color.bg }]}>
+    <View style={[styles.badgeBase, { backgroundColor: color.bg }]}>
       <Text style={[styles.badgeText, { color: color.text }]}>{titleCase(severity)}</Text>
     </View>
   )
@@ -261,7 +250,13 @@ export function ReportDocument({ report }: { report: Report }) {
           <Text style={styles.title}>{report.title}</Text>
           <Text style={styles.generatedAt}>Generated: {formatDate(report.created_at)}</Text>
           <View
-            style={[styles.badge, { backgroundColor: severityColor(report.overall_severity).bg }]}
+            style={[
+              styles.badgeBase,
+              {
+                alignSelf: 'flex-start',
+                backgroundColor: severityColor(report.overall_severity).bg,
+              },
+            ]}
           >
             <Text
               style={[styles.badgeText, { color: severityColor(report.overall_severity).text }]}
@@ -374,8 +369,8 @@ export function ReportDocument({ report }: { report: Report }) {
                   </Text>
                   <SeverityBadge severity={vuln.severity} />
                   {vuln.verified ? (
-                    <View style={styles.verifiedBadge}>
-                      <Text style={styles.verifiedBadgeText}>VERIFIED</Text>
+                    <View style={[styles.badgeBase, { backgroundColor: '#2e7d32' }]}>
+                      <Text style={[styles.badgeText, { color: '#ffffff' }]}>VERIFIED</Text>
                     </View>
                   ) : null}
                 </View>
