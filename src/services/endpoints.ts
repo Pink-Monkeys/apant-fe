@@ -8,6 +8,9 @@ export const ENDPOINTS = {
   agent: {
     loop: '/api/v1/agent/loop',
   },
+  static: {
+    scan: '/api/v1/static/scan',
+  },
   auth: {
     login: '/api/v1/auth/login',
     register: '/api/v1/auth/register',

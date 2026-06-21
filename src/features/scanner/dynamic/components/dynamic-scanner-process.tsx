@@ -306,7 +306,7 @@ export default function DynamicScannerProcess({
                     <InfoRow label="IP Address" value={targetInfo.ip} mono />
                     <InfoRow label="Status" value={targetInfo.status} />
                     <InfoRow label="HTTP Code" value={String(targetInfo.status_code)} mono />
-                    <InfoRow label="CDN" value={targetInfo.cdn.toUpperCase()} />
+                    <InfoRow label="CDN" value={targetInfo.cdn?.toUpperCase() || 'None'} />
                     <InfoRow label="Operating System" value={targetInfo.operating_system} />
                     <InfoRow label="Page Title" value={targetInfo.title} />
                   </div>

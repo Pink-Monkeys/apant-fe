@@ -30,16 +30,34 @@ import {
 } from '#/features/scanner/dynamic/api/dynamic-scanner-api'
 import {
   buildAgentLoopPayload,
+  defaultAuthValues,
   dynamicScannerFormSchema,
+  validateAuthValues,
+  type AuthFieldName,
+  type AuthFormValues,
+  type AuthMethod,
   type DynamicScannerFormValues,
 } from '#/features/scanner/dynamic/schemas/dynamic-scanner-schema'
 import type { AgentLoopPayload, AgentLoopResponse } from '#/features/scanner/dynamic/types'
 import { getErrorMessage, type HttpError } from '#/types/http'
+import { AuthSection } from './auth-section'
 import DynamicScannerProcess from './dynamic-scanner-process'
 
 export default function DynamicScannerForm() {
   const [latestResponse, setLatestResponse] = useState<AgentLoopResponse | null>(null)
   const [elapsedMs, setElapsedMs] = useState(0)
+  const [auth, setAuth] = useState<AuthFormValues>(defaultAuthValues)
+  const [authErrors, setAuthErrors] = useState<Partial<Record<AuthFieldName, string>>>({})
+
+  const handleAuthMethodChange = (method: AuthMethod) => {
+    setAuth((prev) => ({ ...prev, method }))
+    setAuthErrors({})
+  }
+
+  const handleAuthFieldChange = (field: AuthFieldName, value: string) => {
+    setAuth((prev) => ({ ...prev, [field]: value }))
+    setAuthErrors((prev) => ({ ...prev, [field]: undefined }))
+  }
 
   const {
     data: scanTypes = [],
@@ -116,8 +134,14 @@ export default function DynamicScannerForm() {
         return
       }
 
+      const nextAuthErrors = validateAuthValues(auth)
+      if (Object.keys(nextAuthErrors).length > 0) {
+        setAuthErrors(nextAuthErrors)
+        return
+      }
+
       setLatestResponse(null)
-      await mutation.mutateAsync(buildAgentLoopPayload(result.data))
+      await mutation.mutateAsync(buildAgentLoopPayload(result.data, auth))
     },
   })
 
@@ -140,6 +164,8 @@ export default function DynamicScannerForm() {
           onReset={(event) => {
             event.preventDefault()
             form.reset()
+            setAuth(defaultAuthValues)
+            setAuthErrors({})
           }}
         >
           <CardContent>
@@ -224,6 +250,12 @@ export default function DynamicScannerForm() {
                   )
                 }}
               </form.Field>
+              <AuthSection
+                values={auth}
+                errors={authErrors}
+                onMethodChange={handleAuthMethodChange}
+                onFieldChange={handleAuthFieldChange}
+              />
               <form.Field
                 name="description"
                 validators={{

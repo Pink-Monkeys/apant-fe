@@ -6,10 +6,13 @@ import {
   BreadcrumbPage,
 } from '#/components/ui/breadcrumb'
 import { SidebarTrigger } from '#/components/ui/sidebar'
+import StaticScannerForm from '#/features/scanner/static/components/static-scanner-form'
+import { requireAuth } from '#/features/auth/guard'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 
 export const Route = createFileRoute('/scanner/static/')({
+  beforeLoad: () => requireAuth(),
   component: RouteComponent,
 })
 
@@ -33,7 +36,7 @@ function RouteComponent() {
         </>
       }
     >
-      <div>Scanner Static Page</div>
+      <StaticScannerForm />
     </ProtectedLayout>
   )
 }
