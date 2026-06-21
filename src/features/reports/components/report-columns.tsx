@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { cn } from '#/lib/utils'
+import { cn, shortId } from '#/lib/utils'
 import { severityStyles } from '#/lib/severity'
 import type { Report } from '#/features/reports/types'
 
@@ -83,8 +83,11 @@ export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Re
     header: ({ column }) => renderSortableHeader(column, 'ID'),
     cell: ({ row }) => {
       const id = row.original.id
-      const shortId = `RPT-${id.substring(id.length - 4).toUpperCase()}`
-      return <span className="text-muted-foreground font-mono text-xs font-bold">{shortId}</span>
+      return (
+        <span className="text-muted-foreground font-mono text-xs font-bold" title={id}>
+          {shortId('RPT', id)}
+        </span>
+      )
     },
   },
   {

@@ -13,6 +13,7 @@ import { Search, Loader2 } from 'lucide-react'
 import { getScans, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
 import { getScanColumns } from '#/features/scanner/list/components/scan-list-columns'
 import type { Scan } from '#/features/scanner/list/types'
+import { shortId } from '#/lib/utils'
 import { DataTable } from '#/components/ui/data-table'
 import { DataTablePagination } from '#/components/ui/data-table-pagination'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -50,7 +51,7 @@ export default function ScanListTable() {
         s.provider.toLowerCase().includes(query) ||
         s.model.toLowerCase().includes(query) ||
         s.status.toLowerCase().includes(query) ||
-        `scn-${s.id.substring(s.id.length - 4)}`.toLowerCase().includes(query)
+        shortId('SCN', s.id).toLowerCase().includes(query)
     )
   }, [scans, searchQuery])
 

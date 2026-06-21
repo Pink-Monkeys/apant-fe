@@ -57,6 +57,14 @@ export type VulnerabilityPoC = {
   response?: string
 }
 
+export type CodeLocation = {
+  file_path: string
+  line_start: number
+  line_end?: number
+  code_snippet?: string
+  rule_id?: string
+}
+
 export type Vulnerability = {
   id: string
   title: string
@@ -69,6 +77,7 @@ export type Vulnerability = {
   recommendation: string
   verified: boolean
   cvss_score?: number
+  code_location?: CodeLocation
 }
 
 export type Report = {

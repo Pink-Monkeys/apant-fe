@@ -11,7 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '#/components/ui/accordion'
-import { cn } from '#/lib/utils'
+import { cn, shortId } from '#/lib/utils'
 import {
   Activity,
   AlertCircle,
@@ -66,7 +66,6 @@ export function ScanDetail({ scanId }: ScanDetailProps) {
     )
   }
 
-  const shortId = `SCN-${scan.id.substring(scan.id.length - 4).toUpperCase()}`
   const statusStyle = statusStyles[scan.status] || 'bg-gray-500/10 text-gray-500'
   const statusLabel = scan.status.charAt(0).toUpperCase() + scan.status.slice(1)
   const steps = [...scan.steps].sort((a, b) => a.step - b.step)
@@ -83,8 +82,11 @@ export function ScanDetail({ scanId }: ScanDetailProps) {
         </Button>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-xl leading-snug font-bold tracking-tight">Scan Detail</h1>
-          <span className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold">
-            {shortId}
+          <span
+            className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold"
+            title={scan.id}
+          >
+            {shortId('SCN', scan.id)}
           </span>
           <Badge className={cn('border border-transparent font-semibold', statusStyle)}>
             {statusLabel}
