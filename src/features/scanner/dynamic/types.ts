@@ -1,3 +1,11 @@
+// Authenticated session attached to scan requests so pages behind a login can be
+// scanned. Mirrors the backend AuthConfig contract.
+export type AuthConfig = {
+  type: 'cookie' | 'bearer' | 'basic' | 'header'
+  value: string
+  header_name?: string
+}
+
 export type AgentLoopPayload = {
   provider: string
   model: string
@@ -5,6 +13,7 @@ export type AgentLoopPayload = {
   description: string
   scan_type?: string
   max_steps: number
+  auth?: AuthConfig
 }
 
 export type ScanType = {
