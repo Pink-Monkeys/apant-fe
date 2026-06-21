@@ -40,8 +40,10 @@ export async function request<T = unknown>(
   { method = 'GET', body, headers, signal, credentials = 'include' }: RequestOptions = {}
 ): Promise<T> {
   const url = new URL(path, API_BASE_URL).toString()
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+  // Let the browser set the multipart boundary; only force JSON for plain bodies.
   const resolvedHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...headers,
   }
 
@@ -55,7 +57,7 @@ export async function request<T = unknown>(
   const response = await fetch(url, {
     method,
     headers: resolvedHeaders,
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     signal,
     credentials,
   })
