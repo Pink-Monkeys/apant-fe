@@ -19,6 +19,7 @@ import { ReportStatsCards } from '#/features/reports/components/report-stats-car
 import { ReportsCharts } from '#/features/reports/components/reports-charts'
 import { ReportsSummary } from '#/features/reports/components/reports-summary'
 import type { Report } from '#/features/reports/types'
+import { shortId } from '#/lib/utils'
 import { Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -72,8 +73,7 @@ export function ReportsTable() {
 
   // Compare helper
   const handleCompare = (report: Report) => {
-    const shortId = `RPT-${report.id.substring(report.id.length - 4).toUpperCase()}`
-    toast.info(`Selected ${shortId} for comparison. Feature is being integrated!`)
+    toast.info(`Selected ${shortId('RPT', report.id)} for comparison. Feature is being integrated!`)
   }
 
   // View Detail helper
@@ -83,8 +83,7 @@ export function ReportsTable() {
 
   // Delete helper
   const handleDelete = (report: Report) => {
-    const shortId = `RPT-${report.id.substring(report.id.length - 4).toUpperCase()}`
-    if (confirm(`Are you sure you want to delete report ${shortId}?`)) {
+    if (confirm(`Are you sure you want to delete report ${shortId('RPT', report.id)}?`)) {
       deleteMutation.mutate(report.id)
     }
   }

@@ -22,7 +22,7 @@ import {
   AlertCircle,
   Download,
 } from 'lucide-react'
-import { cn } from '#/lib/utils'
+import { cn, shortId } from '#/lib/utils'
 import { toast } from 'sonner'
 
 type ReportDetailProps = {
@@ -105,7 +105,6 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
   const severityKey = (report.overall_severity.charAt(0).toUpperCase() +
     report.overall_severity.slice(1)) as keyof typeof severityStyles
   const overallSeverityStyle = severityStyles[severityKey] || severityStyles.Informational
-  const shortId = `RPT-${report.id.substring(report.id.length - 4).toUpperCase()}`
 
   return (
     <div className="space-y-6">
@@ -137,8 +136,11 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
       </div>
       <div className="mt-10 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold">
-            {shortId}
+          <span
+            className="bg-muted text-muted-foreground px-2 py-0.5 font-mono text-xs font-bold"
+            title={report.id}
+          >
+            {shortId('RPT', report.id)}
           </span>
           <Badge className={cn('border-transparent font-semibold', overallSeverityStyle.badge)}>
             {severityKey} Severity

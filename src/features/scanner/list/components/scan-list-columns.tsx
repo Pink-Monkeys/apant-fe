@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { cn } from '#/lib/utils'
+import { cn, shortId } from '#/lib/utils'
 import type { Scan } from '#/features/scanner/list/types'
 
 // Helper to format sortable header buttons
@@ -43,10 +43,9 @@ export const getScanColumns = (callbacks: ScanColumnCallbacks): ColumnDef<Scan>[
     header: ({ column }) => renderSortableHeader(column, 'ID'),
     cell: ({ row }) => {
       const id = row.original.id
-      const shortId = `SCN-${id.substring(id.length - 4).toUpperCase()}`
       return (
         <span className="text-muted-foreground font-mono text-xs font-bold" title={id}>
-          {shortId}
+          {shortId('SCN', id)}
         </span>
       )
     },
