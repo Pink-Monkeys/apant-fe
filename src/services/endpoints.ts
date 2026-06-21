@@ -24,5 +24,6 @@ export const ENDPOINTS = {
   },
   scans: {
     list: '/api/v1/scans',
+    detail: (id: string) => `/api/v1/scans/${id}`,
   },
 } as const

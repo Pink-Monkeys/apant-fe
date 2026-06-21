@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
 import {
   getCoreRowModel,
@@ -8,16 +9,17 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { Search, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { getScans, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
 import { getScanColumns } from '#/features/scanner/list/components/scan-list-columns'
+import type { Scan } from '#/features/scanner/list/types'
 import { DataTable } from '#/components/ui/data-table'
 import { DataTablePagination } from '#/components/ui/data-table-pagination'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 
 export default function ScanListTable() {
+  const navigate = useNavigate()
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 })
   const [searchQuery, setSearchQuery] = useState('')
@@ -33,10 +35,9 @@ export default function ScanListTable() {
     queryFn: getScans,
   })
 
-  // View detail callback
-  const handleViewDetail = (scan: any) => {
-    const shortId = `SCN-${scan.id.substring(scan.id.length - 4).toUpperCase()}`
-    toast.info(`Detail scan ${shortId} nanti ygy, tunggu ajh`)
+  // Navigate to the scan detail page
+  const handleViewDetail = (scan: Scan) => {
+    navigate({ to: '/scanner/list/$scanId', params: { scanId: scan.id } })
   }
 
   // Filter scans

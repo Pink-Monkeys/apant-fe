@@ -26,7 +26,7 @@ function renderSortableHeader(column: Column<Scan>, label: string) {
   )
 }
 
-const statusStyles = {
+export const statusStyles = {
   completed: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
   running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 animate-pulse',
   failed: 'bg-destructive/10 text-destructive dark:text-red-400 border-destructive/20',
@@ -55,10 +55,14 @@ export const getScanColumns = (callbacks: ScanColumnCallbacks): ColumnDef<Scan>[
     accessorKey: 'target',
     header: ({ column }) => renderSortableHeader(column, 'Target'),
     cell: ({ row }) => {
-      const target = row.original.target
+      const scan = row.original
       return (
-        <span className="block max-w-[250px] truncate font-mono text-xs font-medium" title={target}>
-          {target}
+        <span
+          className="text-foreground hover:text-primary block max-w-[250px] cursor-pointer truncate font-mono text-xs font-medium hover:underline"
+          title={scan.target}
+          onClick={() => callbacks.onViewDetail(scan)}
+        >
+          {scan.target}
         </span>
       )
     },
