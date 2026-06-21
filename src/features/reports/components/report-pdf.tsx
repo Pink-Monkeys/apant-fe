@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   generatedAt: {
     fontSize: 8,
     color: '#666666',
-    marginBottom: 16,
+    marginBottom: 6,
   },
   // Shared base so every badge (overall severity, per-vuln severity, VERIFIED)
   // has identical size. Only background/text color is overridden per badge.
@@ -361,72 +361,111 @@ export function ReportDocument({ report }: { report: Report }) {
           {!vulnerabilities || vulnerabilities.length === 0 ? (
             <Text style={styles.paragraph}>No vulnerabilities were identified on the target.</Text>
           ) : (
-            vulnerabilities.map((vuln) => (
-              <View key={vuln.id} style={styles.vulnCard} wrap={false}>
-                <View style={styles.vulnHeader}>
-                  <Text style={styles.vulnId}>
-                    {vuln.id} - {vuln.title}
-                  </Text>
-                  <SeverityBadge severity={vuln.severity} />
-                  {vuln.verified ? (
-                    <View style={[styles.badgeBase, { backgroundColor: '#2e7d32' }]}>
-                      <Text style={[styles.badgeText, { color: '#ffffff' }]}>VERIFIED</Text>
-                    </View>
+            vulnerabilities.map((vuln) => {
+              // PoC objects can arrive zero-valued (SAST findings have no PoC), so
+              // only render the block when at least one field actually has content.
+              const hasPoc =
+                !!vuln.poc &&
+                [
+                  vuln.poc.method,
+                  vuln.poc.url,
+                  vuln.poc.payload,
+                  vuln.poc.curl_cmd,
+                  vuln.poc.body,
+                  vuln.poc.response,
+                ].some((v) => typeof v === 'string' && v.trim().length > 0)
+
+              // Only show Code Location when it adds info beyond `location` (i.e. a
+              // snippet or rule id); plain file_path/line_start duplicates location.
+              const cl = vuln.code_location
+              const hasCodeLocation =
+                !!cl &&
+                ((cl.code_snippet?.trim()?.length ?? 0) > 0 ||
+                  (cl.rule_id?.trim()?.length ?? 0) > 0)
+
+              return (
+                <View key={vuln.id} style={styles.vulnCard} wrap={false}>
+                  <View style={styles.vulnHeader}>
+                    <Text style={styles.vulnId}>
+                      {vuln.id} - {vuln.title}
+                    </Text>
+                    <SeverityBadge severity={vuln.severity} />
+                    {vuln.verified ? (
+                      <View style={[styles.badgeBase, { backgroundColor: '#2e7d32' }]}>
+                        <Text style={[styles.badgeText, { color: '#ffffff' }]}>VERIFIED</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <InfoTable
+                    rows={[
+                      { label: 'Type', value: vuln.type ?? '' },
+                      { label: 'Location', value: vuln.location ?? '' },
+                      {
+                        label: 'CVSS Score',
+                        value: typeof vuln.cvss_score === 'number' ? String(vuln.cvss_score) : '',
+                      },
+                    ]}
+                  />
+
+                  {hasCodeLocation && cl ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Code Location</Text>
+                      <View style={styles.pocBlock}>
+                        <Text style={styles.pocText}>
+                          {cl.file_path}:{cl.line_start}
+                          {cl.line_end ? `-${cl.line_end}` : ''}
+                          {cl.rule_id ? ` (rule: ${cl.rule_id})` : ''}
+                        </Text>
+                        {cl.code_snippet && cl.code_snippet.trim().length > 0 ? (
+                          <Text style={styles.pocText}>{cl.code_snippet}</Text>
+                        ) : null}
+                      </View>
+                    </>
+                  ) : null}
+
+                  {vuln.description ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Description</Text>
+                      <Text style={styles.paragraph}>{vuln.description}</Text>
+                    </>
+                  ) : null}
+
+                  {vuln.impact ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Impact</Text>
+                      <Text style={styles.paragraph}>{vuln.impact}</Text>
+                    </>
+                  ) : null}
+
+                  {hasPoc ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Proof of Concept</Text>
+                      <View style={styles.pocBlock}>
+                        <Text style={styles.pocText}>
+                          {vuln.poc.method} {vuln.poc.url}
+                        </Text>
+                        {vuln.poc.payload ? (
+                          <Text style={styles.pocText}>Payload: {vuln.poc.payload}</Text>
+                        ) : null}
+                        {vuln.poc.curl_cmd ? (
+                          <Text style={styles.pocText}>$ {vuln.poc.curl_cmd}</Text>
+                        ) : null}
+                      </View>
+                    </>
+                  ) : null}
+
+                  {vuln.recommendation ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Recommendation</Text>
+                      <Text style={[styles.paragraph, styles.recommendation]}>
+                        {vuln.recommendation}
+                      </Text>
+                    </>
                   ) : null}
                 </View>
-
-                <InfoTable
-                  rows={[
-                    { label: 'Type', value: vuln.type ?? '' },
-                    { label: 'Location', value: vuln.location ?? '' },
-                    {
-                      label: 'CVSS Score',
-                      value: typeof vuln.cvss_score === 'number' ? String(vuln.cvss_score) : '',
-                    },
-                  ]}
-                />
-
-                {vuln.description ? (
-                  <>
-                    <Text style={styles.fieldLabel}>Description</Text>
-                    <Text style={styles.paragraph}>{vuln.description}</Text>
-                  </>
-                ) : null}
-
-                {vuln.impact ? (
-                  <>
-                    <Text style={styles.fieldLabel}>Impact</Text>
-                    <Text style={styles.paragraph}>{vuln.impact}</Text>
-                  </>
-                ) : null}
-
-                {vuln.poc ? (
-                  <>
-                    <Text style={styles.fieldLabel}>Proof of Concept</Text>
-                    <View style={styles.pocBlock}>
-                      <Text style={styles.pocText}>
-                        {vuln.poc.method} {vuln.poc.url}
-                      </Text>
-                      {vuln.poc.payload ? (
-                        <Text style={styles.pocText}>Payload: {vuln.poc.payload}</Text>
-                      ) : null}
-                      {vuln.poc.curl_cmd ? (
-                        <Text style={styles.pocText}>$ {vuln.poc.curl_cmd}</Text>
-                      ) : null}
-                    </View>
-                  </>
-                ) : null}
-
-                {vuln.recommendation ? (
-                  <>
-                    <Text style={styles.fieldLabel}>Recommendation</Text>
-                    <Text style={[styles.paragraph, styles.recommendation]}>
-                      {vuln.recommendation}
-                    </Text>
-                  </>
-                ) : null}
-              </View>
-            ))
+              )
+            })
           )}
         </View>
 
