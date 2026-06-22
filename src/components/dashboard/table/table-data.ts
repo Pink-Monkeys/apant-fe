@@ -1,6 +1,5 @@
-import type { SessionHistoryRow } from '#/components/dashboard/table/table-columns'
-
-const latestSessionHistoryData: SessionHistoryRow[] = [
+// Static reference data illustrating the row shape; no longer used as a source.
+const latestSessionHistoryData = [
   {
     reportId: 'RPT113',
     detail: "[Critical] - SQL Injection on /user/login parameter 'username'",
