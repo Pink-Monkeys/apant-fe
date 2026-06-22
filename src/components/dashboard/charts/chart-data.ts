@@ -1,6 +1,20 @@
 import { severityStyles } from '#/lib/severity'
 
-const scanRankingData = [
+// Shapes shared by the static reference data below and the real data computed in
+// useDashboardData; the charts consume these via props.
+export type ScanRankingDatum = {
+  severity: string
+  report: string
+  value: number
+  className: (typeof severityStyles)[keyof typeof severityStyles]
+}
+
+export type TopCategoryDatum = {
+  category: string
+  value: number
+}
+
+const scanRankingData: ScanRankingDatum[] = [
   {
     severity: 'Critical',
     report: '#RPT014',
@@ -33,7 +47,7 @@ const scanRankingData = [
   },
 ]
 
-const topCategoriesData = [
+const topCategoriesData: TopCategoryDatum[] = [
   { category: 'SQLi', value: 21 },
   { category: 'XSS', value: 32 },
   { category: 'CSRF', value: 32 },

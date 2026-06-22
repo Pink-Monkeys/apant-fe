@@ -1,5 +1,7 @@
-import type { Column, ColumnDef } from '@tanstack/react-table'
+import type { Column, ColumnDef, Row } from '@tanstack/react-table'
+import { useNavigate } from '@tanstack/react-router'
 import { ArrowUpDown, Ellipsis } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -13,9 +15,10 @@ import { cn } from '#/lib/utils'
 import { severityStyles } from '#/lib/severity'
 
 type SessionHistoryRow = {
+  scanId: string
   reportId: string
   detail: string
-  severity: 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'
+  severity: 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational' | '-'
 }
 
 function renderSortableHeader(column: Column<SessionHistoryRow>, label: string) {
@@ -35,7 +38,7 @@ function renderSortableHeader(column: Column<SessionHistoryRow>, label: string) 
 const sessionHistoryColumns: ColumnDef<SessionHistoryRow>[] = [
   {
     accessorKey: 'reportId',
-    header: ({ column }) => renderSortableHeader(column, 'ID Reports'),
+    header: ({ column }) => renderSortableHeader(column, 'ID Scan'),
   },
   {
     accessorKey: 'detail',
@@ -47,7 +50,9 @@ const sessionHistoryColumns: ColumnDef<SessionHistoryRow>[] = [
     header: ({ column }) => renderSortableHeader(column, 'Severity'),
     cell: ({ getValue }) => {
       const value = getValue() as SessionHistoryRow['severity']
-      const severityClass = severityStyles[value]?.badge ?? 'bg-secondary text-secondary-foreground'
+      const severityClass =
+        severityStyles[value as keyof typeof severityStyles]?.badge ??
+        'bg-secondary text-secondary-foreground'
 
       return (
         <Badge variant="default" className={cn('border-transparent', severityClass)}>
@@ -60,26 +65,46 @@ const sessionHistoryColumns: ColumnDef<SessionHistoryRow>[] = [
     id: 'actions',
     header: 'Actions',
     enableSorting: false,
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
-            aria-label={`Open actions for ${row.original.reportId}`}
-          >
-            <Ellipsis className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>View details</DropdownMenuItem>
-          <DropdownMenuItem>Copy report ID</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <SessionActionsCell row={row} />,
   },
 ]
+
+function SessionActionsCell({ row }: { row: Row<SessionHistoryRow> }) {
+  const navigate = useNavigate()
+  const { scanId, reportId } = row.original
+
+  const handleViewDetails = () => {
+    navigate({ to: '/scanner/list/$scanId', params: { scanId } })
+  }
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(reportId)
+      toast.success(`Copied ${reportId}`)
+    } catch {
+      toast.error('Failed to copy ID')
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground h-7 w-7"
+          aria-label={`Open actions for ${reportId}`}
+        >
+          <Ellipsis className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleViewDetails}>View details</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyId}>Copy report ID</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 export type { SessionHistoryRow }
 export { sessionHistoryColumns }
