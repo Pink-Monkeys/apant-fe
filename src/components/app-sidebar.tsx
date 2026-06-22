@@ -89,20 +89,16 @@ const data = {
       icon: <Settings />,
       items: [
         {
-          title: 'General',
-          url: '#',
+          title: 'Account',
+          url: '/settings/account',
         },
         {
-          title: 'Team',
-          url: '#',
+          title: 'Appearance',
+          url: '/settings/appearance',
         },
         {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
+          title: 'About',
+          url: '/settings/about',
         },
       ],
     },

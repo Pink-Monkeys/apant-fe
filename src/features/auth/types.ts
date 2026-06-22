@@ -34,3 +34,19 @@ export type AuthSession = {
   expiresIn?: number
   user: AuthUser
 }
+
+export type MeResponse = {
+  data?: { user: AuthUser }
+  message?: string
+  success?: boolean
+}
+
+export type UpdateProfilePayload = {
+  username: string
+  email: string
+}
+
+export type ChangePasswordPayload = {
+  current_password: string
+  new_password: string
+}

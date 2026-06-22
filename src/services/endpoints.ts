@@ -18,6 +18,9 @@ export const ENDPOINTS = {
     csrf: '/api/v1/auth/csrf',
     refresh: '/api/v1/auth/refresh-token',
     logout: '/api/v1/auth/logout',
+    me: '/api/v1/auth/me',
+    profile: '/api/v1/auth/profile',
+    changePassword: '/api/v1/auth/change-password',
   },
   reports: {
     list: '/api/v1/reports',
