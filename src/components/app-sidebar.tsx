@@ -93,10 +93,6 @@ const data = {
           url: '/settings/account',
         },
         {
-          title: 'Appearance',
-          url: '/settings/appearance',
-        },
-        {
           title: 'About',
           url: '/settings/about',
         },

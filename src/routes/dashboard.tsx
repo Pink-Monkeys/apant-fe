@@ -11,9 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/com
 import { ProtectedLayout } from '#/components/protected-layout'
 import { SidebarTrigger } from '#/components/ui/sidebar'
 import { requireAuth } from '#/features/auth/guard'
-import { authSessionKey, getAuthSession } from '#/features/auth/session'
 import { useDashboardData } from '#/features/dashboard/hooks/use-dashboard-data'
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ScanSearch, TimerReset, Users, Wrench } from 'lucide-react'
 
@@ -23,16 +21,6 @@ export const Route = createFileRoute('/dashboard')({
 })
 
 function Dashboard() {
-  const { data: session } = useQuery({
-    queryKey: authSessionKey,
-    queryFn: () => getAuthSession(),
-    initialData: getAuthSession(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  })
-  const displayName =
-    session?.user.username ?? session?.user.email ?? `User-${session?.user.id ?? 'Guest'}`
-
   const { metrics: dashboardMetrics, scanRanking, topCategories } = useDashboardData()
 
   const metrics = [
@@ -67,24 +55,13 @@ function Dashboard() {
       header={
         <>
           <SidebarTrigger />
-          <div className="flex w-full flex-row justify-between">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>
-                    <b>Hi, Pentester {displayName}!</b>
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </>
       }
     >
