@@ -32,7 +32,7 @@ import { logout } from '#/features/auth/api/auth-api'
 import type { AuthResponse } from '#/features/auth/types'
 import { clearAuthSession } from '#/features/auth/session'
 import { getErrorMessage, type ApiErrorEnvelope, type HttpError } from '#/types/http'
-import { Bell, ChevronsUpDown, CircleCheck, CreditCard, LogOut, Sparkles } from 'lucide-react'
+import { ChevronsUpDown, CircleCheck, LogOut, Settings } from 'lucide-react'
 
 export function NavUser({
   user,
@@ -115,24 +115,13 @@ export function NavUser({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <Sparkles />
-                  Upgrade to Pro
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: '/settings/account' })}>
                   <CircleCheck />
                   Account
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <CreditCard />
-                  Billing
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Bell />
-                  Notifications
+                <DropdownMenuItem onClick={() => navigate({ to: '/settings/account' })}>
+                  <Settings />
+                  Settings
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
