@@ -5,6 +5,7 @@ import { AppSidebar } from '#/components/app-sidebar'
 import { ThemeToggleButton } from '#/components/theme-toggle-button'
 import { SidebarInset, SidebarProvider } from '#/components/ui/sidebar'
 import { authSessionKey, getAuthSession } from '#/features/auth/session'
+import { useTokenRefresh } from '#/features/auth/hooks/use-token-refresh'
 
 type ProtectedLayoutProps = {
   header?: ReactNode
@@ -12,6 +13,8 @@ type ProtectedLayoutProps = {
 }
 
 export function ProtectedLayout({ header, children }: ProtectedLayoutProps) {
+  useTokenRefresh()
+
   const { data: session } = useQuery({
     queryKey: authSessionKey,
     queryFn: () => getAuthSession(),
