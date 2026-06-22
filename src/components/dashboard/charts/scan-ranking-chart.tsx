@@ -1,16 +1,16 @@
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from 'recharts'
 
 import { scanRankingConfig } from '#/components/dashboard/charts/chart-constants'
-import { scanRankingData } from '#/components/dashboard/charts/chart-data'
+import type { ScanRankingDatum } from '#/components/dashboard/charts/chart-data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '#/components/ui/chart'
 
-const scanRankingLegend = scanRankingData.map((item) => ({
-  label: item.severity,
-  className: item.className.text,
-}))
+function ScanRankingChart({ data }: { data: ScanRankingDatum[] }) {
+  const scanRankingLegend = data.map((item) => ({
+    label: item.severity,
+    className: item.className.text,
+  }))
 
-function ScanRankingChart() {
   return (
     <Card className="border-chart-1 h-full w-full border">
       <CardHeader>
@@ -20,7 +20,7 @@ function ScanRankingChart() {
       <CardContent className="chart space-y-3">
         <ChartContainer className="aspect-auto h-56 w-full" config={scanRankingConfig}>
           <BarChart
-            data={scanRankingData}
+            data={data}
             layout="vertical"
             margin={{ left: 8, right: 16 }}
             className="rounded-none"
@@ -45,7 +45,7 @@ function ScanRankingChart() {
                 offset={8}
                 className="fill-white text-[10px] font-medium"
               />
-              {scanRankingData.map((item) => (
+              {data.map((item) => (
                 <Cell key={item.severity} className={item.className.bar} />
               ))}
             </Bar>

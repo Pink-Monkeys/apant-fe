@@ -12,6 +12,7 @@ import { ProtectedLayout } from '#/components/protected-layout'
 import { SidebarTrigger } from '#/components/ui/sidebar'
 import { requireAuth } from '#/features/auth/guard'
 import { authSessionKey, getAuthSession } from '#/features/auth/session'
+import { useDashboardData } from '#/features/dashboard/hooks/use-dashboard-data'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ScanSearch, TimerReset, Users, Wrench } from 'lucide-react'
@@ -20,33 +21,6 @@ export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => requireAuth(),
   component: Dashboard,
 })
-
-const metrics = [
-  {
-    label: 'Total Sessions',
-    value: '207x',
-    delta: 'Total number of sessions created',
-    icon: <TimerReset className="size-4" />,
-  },
-  {
-    label: "Today's Session",
-    value: '21x',
-    delta: 'Total number of sessions today',
-    icon: <Users className="size-4" />,
-  },
-  {
-    label: 'Scan Results',
-    value: '201 Successes & 7 Failures',
-    delta: 'Total Number of Successful and Failed Executions',
-    icon: <ScanSearch className="size-4" />,
-  },
-  {
-    label: 'Total Tools Available',
-    value: '21',
-    delta: 'Total amount available',
-    icon: <Wrench className="size-4" />,
-  },
-]
 
 function Dashboard() {
   const { data: session } = useQuery({
@@ -58,6 +32,35 @@ function Dashboard() {
   })
   const displayName =
     session?.user.username ?? session?.user.email ?? `User-${session?.user.id ?? 'Guest'}`
+
+  const { metrics: dashboardMetrics, scanRanking, topCategories } = useDashboardData()
+
+  const metrics = [
+    {
+      label: 'Total Scans',
+      value: `${dashboardMetrics.totalSessions}x`,
+      delta: 'Total number of scans created',
+      icon: <TimerReset className="size-4" />,
+    },
+    {
+      label: "Today's Scans",
+      value: `${dashboardMetrics.todaySession}x`,
+      delta: 'Total number of scans today',
+      icon: <Users className="size-4" />,
+    },
+    {
+      label: 'Scan Results',
+      value: `${dashboardMetrics.scanSuccess} Successes & ${dashboardMetrics.scanFailure} Failures`,
+      delta: 'Total Number of Successful and Failed Executions',
+      icon: <ScanSearch className="size-4" />,
+    },
+    {
+      label: 'Total Tools Available',
+      value: `${dashboardMetrics.totalTools}`,
+      delta: 'Tools currently available',
+      icon: <Wrench className="size-4" />,
+    },
+  ]
 
   return (
     <ProtectedLayout
@@ -104,10 +107,10 @@ function Dashboard() {
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
         <div className="flex min-w-0 lg:flex-1">
-          <ScanRankingChart />
+          <ScanRankingChart data={scanRanking} />
         </div>
         <div className="flex min-w-0 lg:flex-1">
-          <TopCategoriesChart />
+          <TopCategoriesChart data={topCategories} />
         </div>
       </section>
 
