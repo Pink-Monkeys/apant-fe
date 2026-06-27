@@ -66,20 +66,8 @@ const data = {
       icon: <ListChecks />,
       items: [
         {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
+          title: 'Remediation',
+          url: '/recommendations',
         },
       ],
     },
