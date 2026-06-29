@@ -403,8 +403,12 @@ export function ReportDocument({ report }: { report: Report }) {
                       { label: 'Location', value: vuln.location ?? '' },
                       {
                         label: 'CVSS Score',
-                        value: typeof vuln.cvss_score === 'number' ? String(vuln.cvss_score) : '',
+                        value:
+                          typeof vuln.cvss_score === 'number' && vuln.cvss_score > 0
+                            ? vuln.cvss_score.toFixed(1)
+                            : '',
                       },
+                      { label: 'CWE', value: vuln.cwe?.trim() ?? '' },
                     ]}
                   />
 

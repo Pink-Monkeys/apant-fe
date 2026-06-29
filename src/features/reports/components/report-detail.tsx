@@ -273,6 +273,12 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
                 vuln.severity.slice(1)) as keyof typeof severityStyles
               const vulnStyle = severityStyles[vulnSevKey] || severityStyles.Informational
 
+              // CVSS & CWE come straight from the backend; only render when present.
+              const cvssScore = typeof vuln.cvss_score === 'number' ? vuln.cvss_score : 0
+              const showCvss = cvssScore > 0
+              const cwe = vuln.cwe?.trim() ?? ''
+              const cweId = cwe.match(/CWE-(\d+)/i)?.[1]
+
               return (
                 <div key={vuln.id} className="divide-border border-border bg-card divide-y border">
                   {/* Vuln Header */}
@@ -283,11 +289,32 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
                     <Badge className={cn('border-transparent text-[10px]', vulnStyle.badge)}>
                       {vulnSevKey}
                     </Badge>
+                    {showCvss && (
+                      <Badge className={cn('border-transparent text-[10px]', vulnStyle.badge)}>
+                        CVSS {cvssScore.toFixed(1)}
+                      </Badge>
+                    )}
                     {vuln.verified && (
                       <Badge className="border-transparent bg-green-600 text-[10px] text-white">
                         Verified
                       </Badge>
                     )}
+                    {cwe &&
+                      (cweId ? (
+                        <Badge variant="outline" asChild className="text-[10px]">
+                          <a
+                            href={`https://cwe.mitre.org/data/definitions/${cweId}.html`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {cwe}
+                          </a>
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px]">
+                          {cwe}
+                        </Badge>
+                      ))}
                     <span className="ml-1 text-sm font-semibold">{vuln.title}</span>
                   </div>
 

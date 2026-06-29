@@ -77,6 +77,7 @@ export type Vulnerability = {
   recommendation: string
   verified: boolean
   cvss_score?: number
+  cwe?: string
   code_location?: CodeLocation
 }
 
