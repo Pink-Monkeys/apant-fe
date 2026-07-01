@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import type { Column, ColumnDef } from '@tanstack/react-table'
 import {
   ArrowUpDown,
   Ellipsis,
   Eye,
   Download,
+  Loader2,
   Trash2,
   GitCompare,
   ShieldAlert,
@@ -72,7 +74,7 @@ function getDisplaySubtitle(report: Report): string {
 
 export type ReportColumnCallbacks = {
   onViewDetail: (report: Report) => void
-  onExport: (report: Report) => void
+  onDownloadPdf: (report: Report) => Promise<void>
   onDelete: (report: Report) => void
   onCompare: (report: Report) => void
 }
@@ -200,47 +202,73 @@ export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Re
     id: 'actions',
     header: 'Actions',
     enableSorting: false,
-    cell: ({ row }) => {
-      const report = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
-              aria-label={`Open actions for report ${report.id}`}
-            >
-              <Ellipsis className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem
-              className="gap-2 text-xs"
-              onClick={() => callbacks.onViewDetail(report)}
-            >
-              <Eye className="text-muted-foreground size-3.5" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-xs" onClick={() => callbacks.onExport(report)}>
-              <Download className="text-muted-foreground size-3.5" />
-              Export JSON
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-xs" onClick={() => callbacks.onCompare(report)}>
-              <GitCompare className="text-muted-foreground size-3.5" />
-              Compare
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive! gap-2 text-xs"
-              onClick={() => callbacks.onDelete(report)}
-            >
-              <Trash2 className="size-3.5" />
-              Delete report
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => <ReportActionsCell report={row.original} callbacks={callbacks} />,
   },
 ]
+
+function ReportActionsCell({
+  report,
+  callbacks,
+}: {
+  report: Report
+  callbacks: ReportColumnCallbacks
+}) {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+
+  // Keep the menu open while the PDF is prepared and block double-clicks.
+  const handleDownloadPdf = async (event: Event) => {
+    event.preventDefault()
+    if (isGeneratingPdf) return
+    setIsGeneratingPdf(true)
+    try {
+      await callbacks.onDownloadPdf(report)
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground h-7 w-7"
+          aria-label={`Open actions for report ${report.id}`}
+        >
+          <Ellipsis className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem className="gap-2 text-xs" onClick={() => callbacks.onViewDetail(report)}>
+          <Eye className="text-muted-foreground size-3.5" />
+          View details
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2 text-xs"
+          disabled={isGeneratingPdf}
+          onSelect={handleDownloadPdf}
+        >
+          {isGeneratingPdf ? (
+            <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+          ) : (
+            <Download className="text-muted-foreground size-3.5" />
+          )}
+          {isGeneratingPdf ? 'Preparing...' : 'Download PDF'}
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 text-xs" onClick={() => callbacks.onCompare(report)}>
+          <GitCompare className="text-muted-foreground size-3.5" />
+          Compare
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive! gap-2 text-xs"
+          onClick={() => callbacks.onDelete(report)}
+        >
+          <Trash2 className="size-3.5" />
+          Delete report
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
