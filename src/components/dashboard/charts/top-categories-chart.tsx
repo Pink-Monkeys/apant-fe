@@ -68,31 +68,38 @@ function TopCategoriesChart({ data }: { data: TopCategoryDatum[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-auto h-56 w-full" config={topCategoriesConfig}>
-          <BarChart data={data} margin={{ top: 16, left: 8, right: 8 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="category"
-              axisLine={false}
-              tickLine={false}
-              interval={0}
-              height={40}
-              tick={<CategoryTick />}
-            />
-            <YAxis axisLine={false} tickLine={false} />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent labelKey="category" hideIndicator />}
-            />
-            <Bar dataKey="value" className={topCategoryClasses.bar} radius={6}>
-              <LabelList
-                dataKey="value"
-                position="top"
-                className="fill-foreground text-[10px] font-medium"
+        {data.length === 0 ? (
+          <div className="flex h-56 flex-col items-center justify-center gap-1 text-center">
+            <p className="text-muted-foreground text-sm">No vulnerability categories yet</p>
+            <p className="text-muted-foreground text-xs">Run a scan to populate this chart.</p>
+          </div>
+        ) : (
+          <ChartContainer className="aspect-auto h-56 w-full" config={topCategoriesConfig}>
+            <BarChart data={data} margin={{ top: 16, left: 8, right: 8 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="category"
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                height={40}
+                tick={<CategoryTick />}
               />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+              <YAxis axisLine={false} tickLine={false} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent labelKey="category" hideIndicator />}
+              />
+              <Bar dataKey="value" className={topCategoryClasses.bar} radius={6}>
+                <LabelList
+                  dataKey="value"
+                  position="top"
+                  className="fill-foreground text-[10px] font-medium"
+                />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )

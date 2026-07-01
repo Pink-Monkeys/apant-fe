@@ -4,6 +4,7 @@ import { useQueries, useQuery } from '@tanstack/react-query'
 import { getReportDetail, getReports, reportsQueryKeys } from '#/features/reports/api/reports-api'
 import type { Report } from '#/features/reports/types'
 import { severityStyles } from '#/lib/severity'
+import { normalizeVulnCategory } from '#/lib/vuln-category'
 
 export type RemediationSeverity = keyof typeof severityStyles
 
@@ -65,7 +66,9 @@ function buildRemediationGroups(reportDetails: Array<Report | undefined>): Remed
     if (!report) continue
 
     for (const vuln of report.vulnerabilities ?? []) {
-      const type = vuln.type?.trim()
+      // Skip empty and scan-type tokens ("SAST"/"DAST") so only real vulnerability
+      // categories are grouped (shared with the dashboard Top Categories chart).
+      const type = normalizeVulnCategory(vuln.type)
       if (!type) continue
 
       const key = type.toLowerCase()
