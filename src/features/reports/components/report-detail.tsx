@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getReportDetail, reportsQueryKeys } from '#/features/reports/api/reports-api'
+import { downloadReportPdf } from '#/features/reports/lib/download-report-pdf'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -50,23 +51,12 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Generate the PDF on-demand (client-side, vector output via @react-pdf/renderer).
-  // The library is loaded lazily so it stays out of the initial route bundle.
+  // Generate the PDF on-demand (client-side) via the shared helper.
   const handleDownloadPdf = async () => {
     if (!report) return
     setIsGeneratingPdf(true)
     try {
-      const [{ pdf }, { ReportDocument }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('#/features/reports/components/report-pdf'),
-      ])
-      const blob = await pdf(<ReportDocument report={report} />).toBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `report-${report.id}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+      await downloadReportPdf(report)
     } catch (err) {
       console.error('Failed to generate report PDF', err)
       toast.error('Failed to generate PDF. Please try again.')

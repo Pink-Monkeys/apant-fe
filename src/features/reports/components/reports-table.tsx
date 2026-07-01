@@ -9,8 +9,14 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-import { getReports, deleteReport, reportsQueryKeys } from '#/features/reports/api/reports-api'
+import {
+  getReports,
+  getReportDetail,
+  deleteReport,
+  reportsQueryKeys,
+} from '#/features/reports/api/reports-api'
 import { getReportColumns } from '#/features/reports/components/report-columns'
+import { downloadReportPdf } from '#/features/reports/lib/download-report-pdf'
 import { DataTable } from '#/components/ui/data-table'
 import { DataTablePagination } from '#/components/ui/data-table-pagination'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -53,21 +59,19 @@ export function ReportsTable() {
     },
   })
 
-  // Export JSON helper
-  const handleExport = (report: Report) => {
+  // Download PDF helper. The list row is a summary, so fetch the full report
+  // detail first (cached under the same key as the detail page) to produce an
+  // identical PDF via the shared generator.
+  const handleDownloadPdf = async (report: Report) => {
     try {
-      const dataStr = JSON.stringify(report, null, 2)
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-
-      const exportFileDefaultName = `report-${report.id.substring(0, 8)}.json`
-
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
-      linkElement.click()
-      toast.success(`Exported report ${report.id.substring(0, 8)} successfully`)
-    } catch {
-      toast.error('Failed to export report')
+      const fullReport = await queryClient.fetchQuery({
+        queryKey: reportsQueryKeys.detail(report.id),
+        queryFn: () => getReportDetail(report.id),
+      })
+      await downloadReportPdf(fullReport)
+    } catch (err) {
+      console.error('Failed to generate report PDF', err)
+      toast.error('Failed to generate PDF. Please try again.')
     }
   }
 
@@ -109,7 +113,7 @@ export function ReportsTable() {
     () =>
       getReportColumns({
         onViewDetail: handleViewDetail,
-        onExport: handleExport,
+        onDownloadPdf: handleDownloadPdf,
         onDelete: handleDelete,
         onCompare: handleCompare,
       }),
