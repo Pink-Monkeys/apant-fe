@@ -6,6 +6,7 @@ import { getTools, toolsQueryKeys } from '#/features/tools/api/tools-api'
 import type { Report } from '#/features/reports/types'
 import { severityStyles } from '#/lib/severity'
 import { shortId } from '#/lib/utils'
+import { normalizeVulnCategory } from '#/lib/vuln-category'
 import type { ScanRankingDatum, TopCategoryDatum } from '#/components/dashboard/charts/chart-data'
 
 // Fixed severity order so the Scan Results Ranking always shows all five
@@ -71,9 +72,9 @@ function buildTopCategories(reportDetails: Array<Report | undefined>): TopCatego
 
   for (const report of reportDetails) {
     for (const vuln of report?.vulnerabilities ?? []) {
-      const type = vuln.type?.trim()
-      if (!type) continue
-      counts.set(type, (counts.get(type) ?? 0) + 1)
+      const category = normalizeVulnCategory(vuln.type)
+      if (!category) continue
+      counts.set(category, (counts.get(category) ?? 0) + 1)
     }
   }
 
