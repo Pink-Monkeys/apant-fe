@@ -21,7 +21,12 @@ export const Route = createFileRoute('/dashboard')({
 })
 
 function Dashboard() {
-  const { metrics: dashboardMetrics, scanRanking, topCategories } = useDashboardData()
+  const {
+    metrics: dashboardMetrics,
+    scanRanking,
+    topCategories,
+    allCategories,
+  } = useDashboardData()
 
   const metrics = [
     {
@@ -87,7 +92,7 @@ function Dashboard() {
           <ScanRankingChart data={scanRanking} />
         </div>
         <div className="flex min-w-0 lg:flex-1">
-          <TopCategoriesChart data={topCategories} />
+          <TopCategoriesChart data={topCategories} allData={allCategories} />
         </div>
       </section>
 

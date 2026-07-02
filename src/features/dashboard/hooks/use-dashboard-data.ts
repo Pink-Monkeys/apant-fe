@@ -27,6 +27,7 @@ export type DashboardData = {
   metrics: DashboardMetrics
   scanRanking: ScanRankingDatum[]
   topCategories: TopCategoryDatum[]
+  allCategories: TopCategoryDatum[]
   isLoading: boolean
 }
 
@@ -67,7 +68,9 @@ function buildScanRanking(reports: Report[]): ScanRankingDatum[] {
   })
 }
 
-function buildTopCategories(reportDetails: Array<Report | undefined>): TopCategoryDatum[] {
+// Returns every vulnerability category sorted by frequency (descending). The
+// dashboard shows the top slice while the fullscreen drawer shows the full list.
+function buildCategoryRanking(reportDetails: Array<Report | undefined>): TopCategoryDatum[] {
   const counts = new Map<string, number>()
 
   for (const report of reportDetails) {
@@ -81,7 +84,6 @@ function buildTopCategories(reportDetails: Array<Report | undefined>): TopCatego
   return [...counts.entries()]
     .map(([category, value]) => ({ category, value }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, TOP_CATEGORIES_LIMIT)
 }
 
 export function useDashboardData(): DashboardData {
@@ -119,10 +121,13 @@ export function useDashboardData(): DashboardData {
     toolsQuery.isLoading ||
     detailQueries.some((query) => query.isLoading)
 
+  const categoryRanking = buildCategoryRanking(reportDetails)
+
   return {
     metrics,
     scanRanking: buildScanRanking(reports),
-    topCategories: buildTopCategories(reportDetails),
+    topCategories: categoryRanking.slice(0, TOP_CATEGORIES_LIMIT),
+    allCategories: categoryRanking,
     isLoading,
   }
 }
