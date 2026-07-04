@@ -1,5 +1,18 @@
 import { z } from 'zod'
 import type { AgentLoopPayload, AuthConfig } from '#/features/scanner/dynamic/types'
+import { getLlmSelection } from '#/features/llm/selection'
+import type { LlmSelection } from '#/features/llm/types'
+
+// Final fallback when no LLM has been selected and no options are available, so
+// existing behaviour is preserved.
+const DEFAULT_PROVIDER = 'openai'
+const DEFAULT_MODEL = 'gpt-5.4'
+
+// Resolves which provider+model to send: an explicit (already-resolved) selection
+// from the caller, else the persisted selection, else the legacy default.
+function resolveScanLlm(selection?: LlmSelection | null): LlmSelection {
+  return selection ?? getLlmSelection() ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
+}
 
 const optionalScanType = z.preprocess(
   (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
@@ -124,11 +137,13 @@ export function buildAuthConfig(values: AuthFormValues): AuthConfig | undefined 
 
 export function buildAgentLoopPayload(
   values: DynamicScannerFormValues,
-  auth?: AuthFormValues
+  auth?: AuthFormValues,
+  selection?: LlmSelection | null
 ): AgentLoopPayload {
+  const llm = resolveScanLlm(selection)
   const payload: AgentLoopPayload = {
-    provider: 'openai',
-    model: 'gpt-5.4',
+    provider: llm.provider,
+    model: llm.model,
     target: values.address.trim(),
     description: values.description.trim(),
     max_steps: 15,

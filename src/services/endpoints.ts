@@ -30,4 +30,12 @@ export const ENDPOINTS = {
     list: '/api/v1/scans',
     detail: (id: string) => `/api/v1/scans/${id}`,
   },
+  llm: {
+    options: '/api/v1/llm/options',
+    providers: '/api/v1/llm/providers',
+    provider: (id: string) => `/api/v1/llm/providers/${id}`,
+    testProvider: (id: string) => `/api/v1/llm/providers/${id}/test`,
+    models: (id: string) => `/api/v1/llm/providers/${id}/models`,
+    model: (id: string, modelId: string) => `/api/v1/llm/providers/${id}/models/${modelId}`,
+  },
 } as const

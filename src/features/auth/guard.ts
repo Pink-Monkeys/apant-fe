@@ -31,3 +31,13 @@ export async function requireAuth(redirectTo: string = '/login'): Promise<void> 
     throw redirect({ to: redirectTo })
   }
 }
+
+// Ensures the user is authenticated AND holds the given role. Used to guard
+// admin-only routes; the backend independently enforces role on every endpoint,
+// so this is UX defence-in-depth, not the sole protection.
+export async function requireRole(role: string, redirectTo: string = '/dashboard'): Promise<void> {
+  await requireAuth()
+  if (getAuthSession()?.user.role !== role) {
+    throw redirect({ to: redirectTo })
+  }
+}

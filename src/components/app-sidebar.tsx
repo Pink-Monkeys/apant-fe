@@ -13,18 +13,41 @@ import {
   SidebarRail,
 } from '#/components/ui/sidebar'
 import { authSessionKey, getAuthSession } from '#/features/auth/session'
-import { ClipboardList, Eye, LayoutDashboard, ListChecks, ScanEye, Settings } from 'lucide-react'
+import {
+  Bot,
+  ClipboardList,
+  Eye,
+  LayoutDashboard,
+  ListChecks,
+  ScanEye,
+  Settings,
+} from 'lucide-react'
 
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: 'APANT',
-      logo: <Eye />,
-      plan: 'Pentest Platform',
-    },
-  ],
-  navMain: [
+const teams = [
+  {
+    name: 'APANT',
+    logo: <Eye />,
+    plan: 'Pentest Platform',
+  },
+]
+
+type NavItem = {
+  title: string
+  url: string
+  icon?: React.ReactNode
+  items?: { title: string; url: string }[]
+}
+
+// Builds the sidebar menu. The LLM group is role-aware: admins see both
+// management and selection, pentesters only selection. This is UX-only — the
+// backend independently enforces admin-only endpoints.
+function buildNavMain(isAdmin: boolean): NavItem[] {
+  const llmItems = [
+    ...(isAdmin ? [{ title: 'Manajemen LLM', url: '/llm/manage' }] : []),
+    { title: 'Pilih LLM', url: '/llm/select' },
+  ]
+
+  return [
     {
       title: 'Dashboard',
       url: '/dashboard',
@@ -35,65 +58,39 @@ const data = {
       url: '',
       icon: <ScanEye />,
       items: [
-        {
-          title: 'Dynamic',
-          url: '/scanner/dynamic',
-        },
-        {
-          title: 'Static',
-          url: '/scanner/static',
-        },
-        {
-          title: 'Scan List',
-          url: '/scanner/list',
-        },
+        { title: 'Dynamic', url: '/scanner/dynamic' },
+        { title: 'Static', url: '/scanner/static' },
+        { title: 'Scan List', url: '/scanner/list' },
       ],
+    },
+    {
+      title: 'LLM',
+      url: '#',
+      icon: <Bot />,
+      items: llmItems,
     },
     {
       title: 'Reports',
       url: '#',
       icon: <ClipboardList />,
-      items: [
-        {
-          title: 'List Reports',
-          url: '/reports',
-        },
-      ],
+      items: [{ title: 'List Reports', url: '/reports' }],
     },
     {
       title: 'Recommendations',
       url: '#',
       icon: <ListChecks />,
-      items: [
-        {
-          title: 'Remediation',
-          url: '/recommendations',
-        },
-      ],
+      items: [{ title: 'Remediation', url: '/recommendations' }],
     },
     {
       title: 'Settings',
       url: '#',
       icon: <Settings />,
       items: [
-        {
-          title: 'Account',
-          url: '/settings/account',
-        },
-        {
-          title: 'About',
-          url: '/settings/about',
-        },
+        { title: 'Account', url: '/settings/account' },
+        { title: 'About', url: '/settings/about' },
       ],
     },
-  ],
-  // projects: [
-  //   {
-  //     name: 'Design Engineering',
-  //     url: '#',
-  //     icon: <Crop />,
-  //   },
-  // ],
+  ]
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -108,14 +105,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const userName = authenticatedUser?.username ?? authenticatedUser?.email ?? 'User'
   const userEmail = authenticatedUser?.email ?? '—'
   const userAvatar = ''
+  const isAdmin = authenticatedUser?.role === 'admin'
+  const navMain = buildNavMain(isAdmin)
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>

@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { getLlmSelection } from '#/features/llm/selection'
+import type { LlmSelection } from '#/features/llm/types'
 
 const ZIP_EXTENSION = '.zip'
 
@@ -13,15 +15,23 @@ export const staticScannerFormSchema = z.object({
 
 export type StaticScannerFormValues = z.infer<typeof staticScannerFormSchema>
 
-// Hardcoded scan parameters; not exposed to the user.
-const STATIC_SCAN_PROVIDER = 'openai'
-const STATIC_SCAN_MODEL = 'gpt-5.4'
+// Final fallback when no LLM has been selected and no options are available.
+const DEFAULT_PROVIDER = 'openai'
+const DEFAULT_MODEL = 'gpt-5.4'
 
-export function buildStaticScanFormData(values: StaticScannerFormValues): FormData {
+function resolveScanLlm(selection?: LlmSelection | null): LlmSelection {
+  return selection ?? getLlmSelection() ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
+}
+
+export function buildStaticScanFormData(
+  values: StaticScannerFormValues,
+  selection?: LlmSelection | null
+): FormData {
+  const llm = resolveScanLlm(selection)
   const formData = new FormData()
   formData.append('file', values.file)
-  formData.append('provider', STATIC_SCAN_PROVIDER)
-  formData.append('model', STATIC_SCAN_MODEL)
+  formData.append('provider', llm.provider)
+  formData.append('model', llm.model)
   formData.append('description', values.description?.trim() ?? '')
   return formData
 }
