@@ -40,6 +40,9 @@ import {
 } from '#/features/scanner/dynamic/schemas/dynamic-scanner-schema'
 import type { AgentLoopPayload, AgentLoopResponse } from '#/features/scanner/dynamic/types'
 import { getErrorMessage, type HttpError } from '#/types/http'
+import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
+import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
+import { LlmIndicator } from '#/features/llm/components/llm-indicator'
 import { AuthSection } from './auth-section'
 import DynamicScannerProcess from './dynamic-scanner-process'
 
@@ -66,6 +69,20 @@ export default function DynamicScannerForm() {
   } = useQuery({
     queryKey: scanTypesQueryKey,
     queryFn: getScanTypes,
+  })
+
+  // LLM options + persisted selection used to resolve which provider+model the
+  // scan should use (see LlmIndicator for the visible summary).
+  const { data: llmOptions = [] } = useQuery({
+    queryKey: llmOptionsQueryKey,
+    queryFn: getLlmOptions,
+  })
+  const { data: llmSelection } = useQuery({
+    queryKey: llmSelectionKey,
+    queryFn: () => getLlmSelection(),
+    initialData: () => getLlmSelection(),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   })
 
   const defaultScanType = scanTypes[0]?.key
@@ -141,12 +158,14 @@ export default function DynamicScannerForm() {
       }
 
       setLatestResponse(null)
-      await mutation.mutateAsync(buildAgentLoopPayload(result.data, auth))
+      const selection = resolveSelection(llmSelection ?? null, llmOptions)
+      await mutation.mutateAsync(buildAgentLoopPayload(result.data, auth, selection))
     },
   })
 
   return (
     <div>
+      <LlmIndicator />
       <Card className="border-primary mb-10 w-full border">
         <CardHeader>
           <CardTitle>Add Target</CardTitle>

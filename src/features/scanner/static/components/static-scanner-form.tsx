@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Card,
@@ -20,6 +20,9 @@ import {
 } from '#/features/scanner/static/schemas/static-scanner-schema'
 import type { StaticScanResponse } from '#/features/scanner/static/types'
 import { getErrorMessage, type HttpError } from '#/types/http'
+import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
+import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
+import { LlmIndicator } from '#/features/llm/components/llm-indicator'
 import StaticScannerResult from './static-scanner-result'
 
 export default function StaticScannerForm() {
@@ -28,6 +31,18 @@ export default function StaticScannerForm() {
   const [description, setDescription] = useState('')
   const [fileError, setFileError] = useState<string | undefined>(undefined)
   const [elapsedMs, setElapsedMs] = useState(0)
+
+  const { data: llmOptions = [] } = useQuery({
+    queryKey: llmOptionsQueryKey,
+    queryFn: getLlmOptions,
+  })
+  const { data: llmSelection } = useQuery({
+    queryKey: llmSelectionKey,
+    queryFn: () => getLlmSelection(),
+    initialData: () => getLlmSelection(),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  })
 
   const mutation = useMutation<StaticScanResponse, HttpError, FormData>({
     mutationFn: runStaticScan,
@@ -68,7 +83,8 @@ export default function StaticScannerForm() {
     }
 
     setFileError(undefined)
-    mutation.mutate(buildStaticScanFormData(result.data))
+    const selection = resolveSelection(llmSelection ?? null, llmOptions)
+    mutation.mutate(buildStaticScanFormData(result.data, selection))
   }
 
   const handleReset = () => {
@@ -83,6 +99,7 @@ export default function StaticScannerForm() {
 
   return (
     <div>
+      <LlmIndicator />
       <Card className="border-primary mb-10 w-full border">
         <CardHeader>
           <CardTitle>Static Scan (SAST)</CardTitle>
