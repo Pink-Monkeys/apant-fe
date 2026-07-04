@@ -72,18 +72,18 @@ export function LlmSelector() {
 
   const handleSave = () => {
     if (!providerName || !modelId) {
-      toast.error('Pilih provider dan model terlebih dahulu')
+      toast.error('Please select a provider and model first')
       return
     }
     setLlmSelection({ provider: providerName, model: modelId })
-    toast.success(`LLM aktif: ${providerName} / ${modelId}`)
+    toast.success(`Active LLM: ${providerName} / ${modelId}`)
   }
 
   if (isLoading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
         <Loader2 className="text-primary size-8 animate-spin" />
-        <span className="text-muted-foreground text-sm">Memuat opsi LLM...</span>
+        <span className="text-muted-foreground text-sm">Loading LLM options...</span>
       </div>
     )
   }
@@ -91,7 +91,7 @@ export function LlmSelector() {
   if (isError) {
     return (
       <div className="border-destructive/20 bg-destructive/5 text-destructive flex h-64 flex-col items-center justify-center gap-2 border p-4">
-        <span className="font-semibold">Gagal Memuat Opsi LLM</span>
+        <span className="font-semibold">Failed to Load LLM Options</span>
         <span className="text-muted-foreground text-xs">
           {error instanceof Error ? error.message : 'Unknown error'}
         </span>
@@ -103,9 +103,9 @@ export function LlmSelector() {
     return (
       <Card className="border-primary border">
         <CardHeader>
-          <CardTitle>Pilih LLM</CardTitle>
+          <CardTitle>Select LLM</CardTitle>
           <CardDescription>
-            Belum ada provider LLM yang tersedia. Hubungi admin untuk mengaktifkannya.
+            No LLM providers are available yet. Contact an admin to enable one.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -115,10 +115,8 @@ export function LlmSelector() {
   return (
     <Card className="border-primary max-w-lg border">
       <CardHeader>
-        <CardTitle>Pilih LLM</CardTitle>
-        <CardDescription>
-          Pilih provider dan model yang akan digunakan untuk pemindaian Anda.
-        </CardDescription>
+        <CardTitle>Select LLM</CardTitle>
+        <CardDescription>Choose the provider and model to use for your scans.</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
@@ -126,7 +124,7 @@ export function LlmSelector() {
             <FieldLabel htmlFor="llm-provider">Provider</FieldLabel>
             <Select value={providerName} onValueChange={handleProviderChange}>
               <SelectTrigger id="llm-provider" className="w-full">
-                <SelectValue placeholder="Pilih provider" />
+                <SelectValue placeholder="Select provider" />
               </SelectTrigger>
               <SelectContent>
                 {options.map((option) => (
@@ -146,7 +144,7 @@ export function LlmSelector() {
               disabled={modelsForProvider.length === 0}
             >
               <SelectTrigger id="llm-model" className="w-full">
-                <SelectValue placeholder="Pilih model" />
+                <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
                 {modelsForProvider.map((model) => (
@@ -161,7 +159,7 @@ export function LlmSelector() {
       </CardContent>
       <CardFooter>
         <Button type="button" onClick={handleSave} disabled={!providerName || !modelId}>
-          Simpan Pilihan
+          Save Selection
         </Button>
       </CardFooter>
     </Card>

@@ -43,8 +43,8 @@ type NavItem = {
 // backend independently enforces admin-only endpoints.
 function buildNavMain(isAdmin: boolean): NavItem[] {
   const llmItems = [
-    ...(isAdmin ? [{ title: 'Manajemen LLM', url: '/llm/manage' }] : []),
-    { title: 'Pilih LLM', url: '/llm/select' },
+    ...(isAdmin ? [{ title: 'Manage LLM', url: '/llm/manage' }] : []),
+    { title: 'Select LLM', url: '/llm/select' },
   ]
 
   return [

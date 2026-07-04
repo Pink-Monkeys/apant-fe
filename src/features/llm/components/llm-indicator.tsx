@@ -29,16 +29,16 @@ export function LlmIndicator() {
       <BrainCircuit className="size-4" />
       {effective ? (
         <span>
-          LLM aktif:{' '}
+          Active LLM:{' '}
           <span className="text-foreground font-medium">
             {effective.provider} / {effective.model}
           </span>
         </span>
       ) : (
-        <span>Belum ada LLM yang dipilih.</span>
+        <span>No LLM selected yet.</span>
       )}
       <Link to="/llm/select" className="text-primary underline underline-offset-4">
-        {effective ? 'Ubah' : 'Pilih LLM'}
+        {effective ? 'Change' : 'Select LLM'}
       </Link>
     </div>
   )

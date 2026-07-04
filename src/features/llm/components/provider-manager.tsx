@@ -71,7 +71,7 @@ export function ProviderManager() {
     onSuccess: () => {
       invalidate()
       setFormOpen(false)
-      toast.success('Provider ditambahkan')
+      toast.success('Provider added')
     },
     onError,
   })
@@ -86,7 +86,7 @@ export function ProviderManager() {
       invalidate()
       setFormOpen(false)
       setEditing(null)
-      toast.success('Provider diperbarui')
+      toast.success('Provider updated')
     },
     onError,
   })
@@ -96,7 +96,7 @@ export function ProviderManager() {
     onSuccess: () => {
       invalidate()
       setDeleteTarget(null)
-      toast.success('Provider dihapus')
+      toast.success('Provider deleted')
     },
     onError,
   })
@@ -115,7 +115,7 @@ export function ProviderManager() {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
         <Loader2 className="text-primary size-8 animate-spin" />
-        <span className="text-muted-foreground text-sm">Memuat provider LLM...</span>
+        <span className="text-muted-foreground text-sm">Loading LLM providers...</span>
       </div>
     )
   }
@@ -123,7 +123,7 @@ export function ProviderManager() {
   if (isError) {
     return (
       <div className="border-destructive/20 bg-destructive/5 text-destructive flex h-64 flex-col items-center justify-center gap-2 border p-4">
-        <span className="font-semibold">Gagal Memuat Provider</span>
+        <span className="font-semibold">Failed to Load Providers</span>
         <span className="text-muted-foreground text-xs">
           {error instanceof Error ? error.message : 'Unknown error'}
         </span>
@@ -135,14 +135,14 @@ export function ProviderManager() {
     <Card className="border-primary border">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle>Provider LLM</CardTitle>
+          <CardTitle>LLM Providers</CardTitle>
           <p className="text-muted-foreground mt-1 text-xs">
-            Kelola provider dan model yang tersedia untuk seluruh pengguna.
+            Manage the providers and models available to all users.
           </p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="size-4" />
-          Tambah Provider
+          Add Provider
         </Button>
       </CardHeader>
       <CardContent>
@@ -150,19 +150,19 @@ export function ProviderManager() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nama</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Adapter</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>API Key</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead>Models</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {providers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-xs">
-                    Belum ada provider. Klik &quot;Tambah Provider&quot; untuk memulai.
+                    No providers yet. Click &quot;Add Provider&quot; to get started.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -192,7 +192,7 @@ export function ProviderManager() {
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground hover:text-foreground h-7 w-7"
-                            aria-label={`Aksi untuk ${provider.name}`}
+                            aria-label={`Actions for ${provider.name}`}
                           >
                             <Ellipsis className="size-4" />
                           </Button>
@@ -210,7 +210,7 @@ export function ProviderManager() {
                             onClick={() => setModelsTarget(provider)}
                           >
                             <ListChecks className="text-muted-foreground size-3.5" />
-                            Kelola Model
+                            Manage Models
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="gap-2 text-xs"
@@ -225,7 +225,7 @@ export function ProviderManager() {
                             onClick={() => setDeleteTarget(provider)}
                           >
                             <Trash2 className="size-3.5" />
-                            Hapus Provider
+                            Delete Provider
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -255,8 +255,8 @@ export function ProviderManager() {
       <ConfirmDeleteDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(next) => !next && setDeleteTarget(null)}
-        title="Hapus Provider"
-        description={`Hapus provider "${deleteTarget?.name ?? ''}" beserta seluruh modelnya? Tindakan ini tidak dapat dibatalkan.`}
+        title="Delete Provider"
+        description={`Delete provider "${deleteTarget?.name ?? ''}" and all of its models? This action cannot be undone.`}
         isPending={deleteMutation.isPending}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
       />

@@ -71,7 +71,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
     onSuccess: () => {
       invalidate()
       setEditingId(null)
-      toast.success('Model diperbarui')
+      toast.success('Model updated')
     },
     onError,
   })
@@ -87,7 +87,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       invalidate()
       setNewModelId('')
       setNewLabel('')
-      toast.success('Model ditambahkan')
+      toast.success('Model added')
     },
     onError,
   })
@@ -102,7 +102,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
     onSuccess: () => {
       invalidate()
       setDeleteTarget(null)
-      toast.success('Model dihapus')
+      toast.success('Model deleted')
     },
     onError,
   })
@@ -120,7 +120,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       enabled: model.enabled,
     })
     if (!result.success) {
-      toast.error(result.error.issues[0]?.message ?? 'Input tidak valid')
+      toast.error(result.error.issues[0]?.message ?? 'Invalid input')
       return
     }
     updateMutation.mutate({
@@ -132,7 +132,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
   const handleAdd = () => {
     const result = modelSchema.safeParse({ model_id: newModelId, label: newLabel, enabled: true })
     if (!result.success) {
-      toast.error(result.error.issues[0]?.message ?? 'Model ID wajib diisi')
+      toast.error(result.error.issues[0]?.message ?? 'Model ID is required')
       return
     }
     addMutation.mutate({ model_id: newModelId.trim(), label: newLabel.trim(), enabled: true })
@@ -145,15 +145,15 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Kelola Model — {provider?.name ?? ''}</DialogTitle>
+            <DialogTitle>Manage Models — {provider?.name ?? ''}</DialogTitle>
             <DialogDescription>
-              Aktif/nonaktifkan, ubah, atau hapus model, dan tambah model manual.
+              Enable/disable, edit, or delete models, and add a model manually.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
             {models.length === 0 ? (
-              <p className="text-muted-foreground text-xs">Belum ada model.</p>
+              <p className="text-muted-foreground text-xs">No models yet.</p>
             ) : (
               models.map((model) => {
                 const isEditing = editingId === model.id
@@ -169,7 +169,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                         />
                         <Input
                           className="h-7"
-                          placeholder="label (opsional)"
+                          placeholder="label (optional)"
                           value={editLabel}
                           onChange={(event) => setEditLabel(event.target.value)}
                         />
@@ -197,7 +197,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                           variant="ghost"
                           disabled={updateMutation.isPending}
                           onClick={() => saveEdit(model)}
-                          aria-label="Simpan"
+                          aria-label="Save"
                         >
                           <Check className="size-4" />
                         </Button>
@@ -206,7 +206,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                           size="icon-sm"
                           variant="ghost"
                           onClick={() => setEditingId(null)}
-                          aria-label="Batal"
+                          aria-label="Cancel"
                         >
                           <X className="size-4" />
                         </Button>
@@ -229,7 +229,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                           size="icon-sm"
                           variant="ghost"
                           onClick={() => startEdit(model)}
-                          aria-label="Edit"
+                          aria-label="Edit model"
                         >
                           <Pencil className="size-4" />
                         </Button>
@@ -239,7 +239,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                           variant="ghost"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setDeleteTarget(model)}
-                          aria-label="Hapus"
+                          aria-label="Delete model"
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -252,30 +252,30 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
           </div>
 
           <div className="border-t pt-3">
-            <p className="mb-2 text-xs font-medium">Tambah Model Manual</p>
+            <p className="mb-2 text-xs font-medium">Add Model Manually</p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 className="h-8"
-                placeholder="model_id (mis. gpt-5.4)"
+                placeholder="model_id (e.g. gpt-5.4)"
                 value={newModelId}
                 onChange={(event) => setNewModelId(event.target.value)}
               />
               <Input
                 className="h-8"
-                placeholder="label (opsional)"
+                placeholder="label (optional)"
                 value={newLabel}
                 onChange={(event) => setNewLabel(event.target.value)}
               />
               <Button type="button" size="sm" disabled={addMutation.isPending} onClick={handleAdd}>
                 <Plus className="size-4" />
-                Tambah
+                Add
               </Button>
             </div>
           </div>
 
           <DialogFooter className="mt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Tutup
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -284,8 +284,8 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       <ConfirmDeleteDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(next) => !next && setDeleteTarget(null)}
-        title="Hapus Model"
-        description={`Hapus model "${deleteTarget?.model_id ?? ''}"? Tindakan ini tidak dapat dibatalkan.`}
+        title="Delete Model"
+        description={`Delete model "${deleteTarget?.model_id ?? ''}"? This action cannot be undone.`}
         isPending={deleteMutation.isPending}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
       />
