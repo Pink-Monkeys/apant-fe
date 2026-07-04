@@ -227,13 +227,14 @@ export function ProviderFormDialog({
                       id={field.name}
                       name={field.name}
                       type="url"
-                      placeholder="https://openrouter.ai/api/v1"
+                      placeholder="https://api.deepseek.com"
                       value={field.state.value ?? ''}
                       onChange={(event) => field.handleChange(event.target.value)}
                       onBlur={field.handleBlur}
                     />
                     <FieldDescription>
-                      Optional. For non-OpenAI, OpenAI-compatible providers such as OpenRouter.
+                      Required for OpenAI Chat providers (e.g. DeepSeek: https://api.deepseek.com,
+                      Gemini OpenAI mode). Leave empty for OpenAI/Anthropic.
                     </FieldDescription>
                     <FieldError errors={errors} />
                   </Field>

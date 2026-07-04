@@ -3,11 +3,13 @@ import type { AdapterType } from '#/features/llm/types'
 
 export const ADAPTER_TYPES = [
   'openai-compatible',
+  'openai-chat',
   'anthropic',
 ] as const satisfies readonly AdapterType[]
 
 export const adapterTypeOptions: { value: AdapterType; label: string }[] = [
-  { value: 'openai-compatible', label: 'OpenAI-compatible' },
+  { value: 'openai-compatible', label: 'OpenAI-compatible (Responses API)' },
+  { value: 'openai-chat', label: 'OpenAI Chat (DeepSeek, Gemini, OpenRouter, …)' },
   { value: 'anthropic', label: 'Anthropic' },
 ]
 

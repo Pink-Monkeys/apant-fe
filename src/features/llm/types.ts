@@ -1,5 +1,5 @@
 // Adapter types accepted by the backend. Presented as a Select (not free text).
-export type AdapterType = 'openai-compatible' | 'anthropic'
+export type AdapterType = 'openai-compatible' | 'openai-chat' | 'anthropic'
 
 // ─── /llm/options (all authenticated users) ───────────────────────────────────
 
