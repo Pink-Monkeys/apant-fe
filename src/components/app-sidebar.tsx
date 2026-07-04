@@ -21,6 +21,7 @@ import {
   ListChecks,
   ScanEye,
   Settings,
+  Users,
 } from 'lucide-react'
 
 const teams = [
@@ -39,8 +40,9 @@ type NavItem = {
 }
 
 // Builds the sidebar menu. The LLM group is role-aware: admins see both
-// management and selection, pentesters only selection. This is UX-only — the
-// backend independently enforces admin-only endpoints.
+// management and selection, pentesters only selection. The User Management group
+// is admin-only. This is UX-only — the backend independently enforces admin-only
+// endpoints.
 function buildNavMain(isAdmin: boolean): NavItem[] {
   const llmItems = [
     ...(isAdmin ? [{ title: 'Manage LLM', url: '/llm/manage' }] : []),
@@ -64,12 +66,6 @@ function buildNavMain(isAdmin: boolean): NavItem[] {
       ],
     },
     {
-      title: 'LLM',
-      url: '#',
-      icon: <Bot />,
-      items: llmItems,
-    },
-    {
       title: 'Reports',
       url: '#',
       icon: <ClipboardList />,
@@ -81,6 +77,22 @@ function buildNavMain(isAdmin: boolean): NavItem[] {
       icon: <ListChecks />,
       items: [{ title: 'Remediation', url: '/recommendations' }],
     },
+    {
+      title: 'LLM',
+      url: '#',
+      icon: <Bot />,
+      items: llmItems,
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: 'User Management',
+            url: '#',
+            icon: <Users />,
+            items: [{ title: 'Manage Users', url: '/users' }],
+          },
+        ]
+      : []),
     {
       title: 'Settings',
       url: '#',

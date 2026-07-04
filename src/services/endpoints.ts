@@ -38,4 +38,11 @@ export const ENDPOINTS = {
     models: (id: string) => `/api/v1/llm/providers/${id}/models`,
     model: (id: string, modelId: string) => `/api/v1/llm/providers/${id}/models/${modelId}`,
   },
+  users: {
+    list: '/api/v1/users',
+    create: '/api/v1/users',
+    role: (id: string) => `/api/v1/users/${id}/role`,
+    resetPassword: (id: string) => `/api/v1/users/${id}/reset-password`,
+    detail: (id: string) => `/api/v1/users/${id}`,
+  },
 } as const
