@@ -36,10 +36,10 @@ export function ConfirmDeleteDialog({
         </DialogHeader>
         <DialogFooter className="mt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Batal
+            Cancel
           </Button>
           <Button type="button" variant="destructive" disabled={isPending} onClick={onConfirm}>
-            {isPending ? 'Menghapus...' : 'Hapus'}
+            {isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -52,9 +52,9 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
     onSuccess: (response) => {
       setResult(response)
       if (response.ok) {
-        toast.success(response.message || 'Provider berhasil diverifikasi')
+        toast.success(response.message || 'Provider verified successfully')
       } else {
-        toast.error(response.message || 'Verifikasi provider gagal')
+        toast.error(response.message || 'Provider verification failed')
       }
     },
     onError: (error) => {
@@ -74,7 +74,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
     onSuccess: (_data, modelIds) => {
       queryClient.invalidateQueries({ queryKey: llmProvidersQueryKey })
       queryClient.invalidateQueries({ queryKey: llmOptionsQueryKey })
-      toast.success(`${modelIds.length} model ditambahkan`)
+      toast.success(`${modelIds.length} model(s) added`)
       onOpenChange(false)
     },
     onError: (error) => {
@@ -93,7 +93,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
         <DialogHeader>
           <DialogTitle>Test &amp; Fetch Models</DialogTitle>
           <DialogDescription>
-            Verifikasi API key {provider?.name ?? ''} dan pilih model yang ingin ditambahkan.
+            Verify the {provider?.name ?? ''} API key and choose which models to add.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,7 +107,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
             {testMutation.isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Menguji...
+                Testing...
               </>
             ) : (
               'Test & Fetch Models'
@@ -135,7 +135,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
                       />
                       <span className="font-mono">{modelId}</span>
                       {alreadyAdded ? (
-                        <span className="text-muted-foreground">(sudah ditambahkan)</span>
+                        <span className="text-muted-foreground">(already added)</span>
                       ) : null}
                     </Label>
                   )
@@ -143,7 +143,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
               </div>
             ) : (
               <p className="text-muted-foreground text-xs">
-                Tidak ada model yang tersedia dari provider ini.
+                No models available from this provider.
               </p>
             )
           ) : null}
@@ -151,14 +151,14 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
 
         <DialogFooter className="mt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Tutup
+            Close
           </Button>
           <Button
             type="button"
             disabled={selectedIds.length === 0 || addMutation.isPending}
             onClick={() => addMutation.mutate(selectedIds)}
           >
-            {addMutation.isPending ? 'Menambahkan...' : `Tambah ${selectedIds.length} Model`}
+            {addMutation.isPending ? 'Adding...' : `Add ${selectedIds.length} Model(s)`}
           </Button>
         </DialogFooter>
       </DialogContent>

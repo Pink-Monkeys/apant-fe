@@ -29,7 +29,7 @@ function RouteComponent() {
               </BreadcrumbItem>
               <ChevronRight className="size-4" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Manajemen</BreadcrumbPage>
+                <BreadcrumbPage>Manage</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

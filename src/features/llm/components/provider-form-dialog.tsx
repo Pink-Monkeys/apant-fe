@@ -110,11 +110,11 @@ export function ProviderFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Provider' : 'Tambah Provider'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit Provider' : 'Add Provider'}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? 'Ubah konfigurasi provider LLM. Kosongkan API key untuk mempertahankan key saat ini.'
-              : 'Tambahkan provider LLM baru beserta API key-nya.'}
+              ? 'Update the LLM provider configuration. Leave the API key empty to keep the current one.'
+              : 'Add a new LLM provider along with its API key.'}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -138,7 +138,7 @@ export function ProviderFormDialog({
                   .map((error) => ({ message: String(error) }))
                 return (
                   <Field data-invalid={errors.length > 0}>
-                    <FieldLabel htmlFor={field.name}>Nama</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -162,7 +162,7 @@ export function ProviderFormDialog({
                     onValueChange={(value) => field.handleChange(value as AdapterType)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Pilih adapter type" />
+                      <SelectValue placeholder="Select adapter type" />
                     </SelectTrigger>
                     <SelectContent>
                       {adapterTypeOptions.map((option) => (
@@ -195,15 +195,13 @@ export function ProviderFormDialog({
                       name={field.name}
                       type="password"
                       autoComplete="off"
-                      placeholder={
-                        isEdit ? 'Biarkan kosong untuk mempertahankan key saat ini' : 'sk-...'
-                      }
+                      placeholder={isEdit ? 'Leave empty to keep the current key' : 'sk-...'}
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
                       onBlur={field.handleBlur}
                     />
                     {isEdit && provider?.has_key ? (
-                      <FieldDescription>Key saat ini: •••• {provider.key_last4}</FieldDescription>
+                      <FieldDescription>Current key: •••• {provider.key_last4}</FieldDescription>
                     ) : null}
                     <FieldError errors={errors} />
                   </Field>
@@ -235,7 +233,7 @@ export function ProviderFormDialog({
                       onBlur={field.handleBlur}
                     />
                     <FieldDescription>
-                      Opsional. Untuk provider OpenAI-compatible non-OpenAI seperti OpenRouter.
+                      Optional. For non-OpenAI, OpenAI-compatible providers such as OpenRouter.
                     </FieldDescription>
                     <FieldError errors={errors} />
                   </Field>
@@ -259,10 +257,10 @@ export function ProviderFormDialog({
 
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Batal
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah'}
+              {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Add'}
             </Button>
           </DialogFooter>
         </form>
