@@ -1,5 +1,6 @@
 import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
 import type { Report, ReportSeverity } from '#/features/reports/types'
+import { isSastReport, joinOrDash, numberOrDash } from '#/features/reports/lib/report-format'
 
 // @react-pdf uses its own CSS-subset flexbox via StyleSheet (NOT Tailwind).
 // Severity colors are defined locally because the PDF renderer needs plain hex
@@ -39,6 +40,22 @@ function formatDate(iso: string): string {
 function joinList(list: Array<string | number> | null | undefined): string {
   if (!list || list.length === 0) return ''
   return list.join(', ')
+}
+
+// Bounds a code snippet so a single finding cannot produce a card taller than the
+// PDF layout engine can place, which otherwise aborts the whole render. `compact`
+// tightens the limits for the fallback render path.
+function capSnippet(snippet: string, compact: boolean): string {
+  const maxLines = compact ? 18 : 80
+  const maxLen = compact ? 120 : 240
+  const lines = snippet.split('\n')
+  const kept = lines
+    .slice(0, maxLines)
+    .map((line) => (line.length > maxLen ? `${line.slice(0, maxLen)}…` : line))
+  if (lines.length > maxLines) {
+    kept.push(`… (${lines.length - maxLines} more lines — see the web report)`)
+  }
+  return kept.join('\n')
 }
 
 const styles = StyleSheet.create({
@@ -216,7 +233,11 @@ function SeverityBadge({ severity }: { severity: ReportSeverity }) {
 type TableRowData = { label: string; value: string }
 
 function InfoTable({ rows }: { rows: TableRowData[] }) {
-  const visibleRows = rows.filter((row) => row.value.trim().length > 0)
+  // Coerce defensively: a non-string value slipping through would make .trim()
+  // throw and abort the whole PDF render.
+  const visibleRows = rows
+    .map((row) => ({ label: row.label, value: String(row.value ?? '') }))
+    .filter((row) => row.value.trim().length > 0)
   if (visibleRows.length === 0) return null
   return (
     <View style={styles.table}>
@@ -233,10 +254,14 @@ function InfoTable({ rows }: { rows: TableRowData[] }) {
   )
 }
 
-export function ReportDocument({ report }: { report: Report }) {
+// `compact` is a fallback layout used when the normal render hits a @react-pdf
+// layout error on very large reports: cards may break across pages and snippets
+// are capped harder so the document always renders.
+export function ReportDocument({ report, compact = false }: { report: Report; compact?: boolean }) {
   const { metadata, target_info, attack_surface, statistics, vulnerabilities } = report
   const bySeverity = statistics?.by_severity
   const criticalHigh = (bySeverity?.critical ?? 0) + (bySeverity?.high ?? 0)
+  const isSast = isSastReport(metadata.scan_type)
 
   return (
     <Document
@@ -297,62 +322,112 @@ export function ReportDocument({ report }: { report: Report }) {
           </View>
         </View>
 
-        {/* Target Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Target Information</Text>
-          <InfoTable
-            rows={[
-              { label: 'Target', value: metadata.target ?? '' },
-              {
-                label: 'Scan Type',
-                value: metadata.scan_type ? titleCase(metadata.scan_type) : '',
-              },
-              { label: 'Description', value: metadata.description ?? '' },
-              {
-                label: 'Status',
-                value: target_info
-                  ? `${target_info.status_code ?? ''} ${target_info.status ?? ''}`.trim()
-                  : '',
-              },
-              { label: 'IP Address', value: target_info?.ip_address ?? '' },
-              { label: 'Web Server', value: target_info?.web_server ?? '' },
-              { label: 'Operating System', value: target_info?.operating_system ?? '' },
-              { label: 'CDN', value: target_info?.cdn ?? '' },
-              { label: 'Page Title', value: target_info?.page_title ?? '' },
-              { label: 'Tech Stack', value: joinList(target_info?.tech_stack) },
-              { label: 'Open Ports', value: joinList(target_info?.open_ports) },
-              {
-                label: 'Scan Date',
-                value: metadata.scan_date ? formatDate(metadata.scan_date) : '',
-              },
-              { label: 'Duration', value: metadata.duration ?? '' },
-              { label: 'Pentested by', value: report.username || '—' },
-              {
-                label: 'Provider / Model',
-                value: `${metadata.provider ?? ''} / ${metadata.model ?? ''}`.replace(/^ \/ $/, ''),
-              },
-              { label: 'Tools Used', value: joinList(metadata.tools_used) },
-            ]}
-          />
-        </View>
+        {isSast ? (
+          <>
+            {/* Source Analysis (SAST) */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Source Analysis</Text>
+              <InfoTable
+                rows={[
+                  { label: 'Source', value: metadata.target ?? '' },
+                  {
+                    label: 'Scan Type',
+                    value: metadata.scan_type ? titleCase(metadata.scan_type) : '',
+                  },
+                  { label: 'Description', value: metadata.description ?? '' },
+                  { label: 'Tech Stack', value: joinOrDash(target_info?.tech_stack) },
+                  { label: 'Files Analyzed', value: numberOrDash(attack_surface?.files_analyzed) },
+                  {
+                    label: 'Scan Date',
+                    value: metadata.scan_date ? formatDate(metadata.scan_date) : '',
+                  },
+                  { label: 'Pentested by', value: report.username || '—' },
+                  {
+                    label: 'Provider / Model',
+                    value: `${metadata.provider ?? ''} / ${metadata.model ?? ''}`.replace(
+                      /^ \/ $/,
+                      ''
+                    ),
+                  },
+                ]}
+              />
+            </View>
 
-        {/* Attack Surface */}
-        {attack_surface ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Attack Surface</Text>
-            <InfoTable
-              rows={[
-                { label: 'Subdomains Found', value: String(attack_surface.subdomains_found) },
-                { label: 'URLs Crawled', value: String(attack_surface.urls_crawled) },
-                {
-                  label: 'Parameterized Endpoints',
-                  value: String(attack_surface.parameterized_endpoints),
-                },
-                { label: 'Open Ports Count', value: String(attack_surface.open_ports_count) },
-              ]}
-            />
-          </View>
-        ) : null}
+            {/* Scan Coverage (SAST) */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Scan Coverage</Text>
+              <InfoTable
+                rows={[
+                  { label: 'Tools Used', value: joinOrDash(metadata.tools_used) },
+                  { label: 'Agent Steps', value: numberOrDash(metadata.total_steps) },
+                  { label: 'Duration', value: metadata.duration || '—' },
+                ]}
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Target Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Target Information</Text>
+              <InfoTable
+                rows={[
+                  { label: 'Target', value: metadata.target ?? '' },
+                  {
+                    label: 'Scan Type',
+                    value: metadata.scan_type ? titleCase(metadata.scan_type) : '',
+                  },
+                  { label: 'Description', value: metadata.description ?? '' },
+                  {
+                    label: 'Status',
+                    value: target_info
+                      ? `${target_info.status_code ?? ''} ${target_info.status ?? ''}`.trim()
+                      : '',
+                  },
+                  { label: 'IP Address', value: target_info?.ip_address ?? '' },
+                  { label: 'Web Server', value: target_info?.web_server ?? '' },
+                  { label: 'Operating System', value: target_info?.operating_system ?? '' },
+                  { label: 'CDN', value: target_info?.cdn ?? '' },
+                  { label: 'Page Title', value: target_info?.page_title ?? '' },
+                  { label: 'Tech Stack', value: joinList(target_info?.tech_stack) },
+                  { label: 'Open Ports', value: joinList(target_info?.open_ports) },
+                  {
+                    label: 'Scan Date',
+                    value: metadata.scan_date ? formatDate(metadata.scan_date) : '',
+                  },
+                  { label: 'Duration', value: metadata.duration ?? '' },
+                  { label: 'Pentested by', value: report.username || '—' },
+                  {
+                    label: 'Provider / Model',
+                    value: `${metadata.provider ?? ''} / ${metadata.model ?? ''}`.replace(
+                      /^ \/ $/,
+                      ''
+                    ),
+                  },
+                  { label: 'Tools Used', value: joinList(metadata.tools_used) },
+                ]}
+              />
+            </View>
+
+            {/* Attack Surface */}
+            {attack_surface ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Attack Surface</Text>
+                <InfoTable
+                  rows={[
+                    { label: 'Subdomains Found', value: String(attack_surface.subdomains_found) },
+                    { label: 'URLs Crawled', value: String(attack_surface.urls_crawled) },
+                    {
+                      label: 'Parameterized Endpoints',
+                      value: String(attack_surface.parameterized_endpoints),
+                    },
+                    { label: 'Open Ports Count', value: String(attack_surface.open_ports_count) },
+                  ]}
+                />
+              </View>
+            ) : null}
+          </>
+        )}
 
         {/* Vulnerabilities */}
         <View style={styles.section}>
@@ -376,16 +451,30 @@ export function ReportDocument({ report }: { report: Report }) {
                   vuln.poc.response,
                 ].some((v) => typeof v === 'string' && v.trim().length > 0)
 
-              // Only show Code Location when it adds info beyond `location` (i.e. a
-              // snippet or rule id); plain file_path/line_start duplicates location.
+              // Show Code Evidence for SAST findings: a snippet, or at least a file
+              // path so the location is still reported when no snippet is available.
               const cl = vuln.code_location
+              const codeSnippet = typeof cl?.code_snippet === 'string' ? cl.code_snippet : ''
+              const filePath = typeof cl?.file_path === 'string' ? cl.file_path : ''
               const hasCodeLocation =
-                !!cl &&
-                ((cl.code_snippet?.trim()?.length ?? 0) > 0 ||
-                  (cl.rule_id?.trim()?.length ?? 0) > 0)
+                !!cl && (codeSnippet.trim().length > 0 || filePath.trim().length > 0)
+              // Pre-build a single string so no raw number/undefined is passed as a
+              // <Text> child (a source of render failures in the browser).
+              const codeLocationLabel = cl
+                ? [
+                    filePath,
+                    typeof cl.line_start === 'number' ? `:${cl.line_start}` : '',
+                    typeof cl.line_end === 'number' ? `-${cl.line_end}` : '',
+                    cl.rule_id ? ` (rule: ${cl.rule_id})` : '',
+                  ].join('')
+                : ''
 
               return (
-                <View key={vuln.id} style={styles.vulnCard} wrap={false}>
+                // Allow cards to break across pages. A finding whose Code Evidence
+                // is taller than a page cannot be placed as an atomic block and makes
+                // @react-pdf abort the whole render; snippets are also capped so the
+                // break stays well-behaved.
+                <View key={vuln.id} style={styles.vulnCard} wrap>
                   <View style={styles.vulnHeader}>
                     <Text style={styles.vulnId}>
                       {vuln.id} - {vuln.title}
@@ -413,22 +502,6 @@ export function ReportDocument({ report }: { report: Report }) {
                     ]}
                   />
 
-                  {hasCodeLocation && cl ? (
-                    <>
-                      <Text style={styles.fieldLabel}>Code Location</Text>
-                      <View style={styles.pocBlock}>
-                        <Text style={styles.pocText}>
-                          {cl.file_path}:{cl.line_start}
-                          {cl.line_end ? `-${cl.line_end}` : ''}
-                          {cl.rule_id ? ` (rule: ${cl.rule_id})` : ''}
-                        </Text>
-                        {cl.code_snippet && cl.code_snippet.trim().length > 0 ? (
-                          <Text style={styles.pocText}>{cl.code_snippet}</Text>
-                        ) : null}
-                      </View>
-                    </>
-                  ) : null}
-
                   {vuln.description ? (
                     <>
                       <Text style={styles.fieldLabel}>Description</Text>
@@ -440,6 +513,20 @@ export function ReportDocument({ report }: { report: Report }) {
                     <>
                       <Text style={styles.fieldLabel}>Impact</Text>
                       <Text style={styles.paragraph}>{vuln.impact}</Text>
+                    </>
+                  ) : null}
+
+                  {hasCodeLocation ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Code Evidence</Text>
+                      <View style={styles.pocBlock}>
+                        {codeLocationLabel ? (
+                          <Text style={styles.pocText}>{codeLocationLabel}</Text>
+                        ) : null}
+                        {codeSnippet.trim().length > 0 ? (
+                          <Text style={styles.pocText}>{capSnippet(codeSnippet, compact)}</Text>
+                        ) : null}
+                      </View>
                     </>
                   ) : null}
 
