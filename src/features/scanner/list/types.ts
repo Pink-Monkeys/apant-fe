@@ -1,4 +1,4 @@
-export type ScanStatus = 'completed' | 'running' | 'failed' | 'pending'
+export type ScanStatus = 'completed' | 'running' | 'failed' | 'cancelled' | 'pending'
 
 export type Scan = {
   id: string
@@ -55,6 +55,7 @@ export type ScanDetail = {
   status: ScanStatus
   steps: ScanStep[]
   final_answer?: string
+  error?: string
   duration: string
   created_at: string
   updated_at: string

@@ -30,6 +30,7 @@ export const statusStyles = {
   completed: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
   running: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 animate-pulse',
   failed: 'bg-destructive/10 text-destructive dark:text-red-400 border-destructive/20',
+  cancelled: 'bg-muted text-muted-foreground border-border',
   pending: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
 } as const
 

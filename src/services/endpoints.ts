@@ -8,9 +8,11 @@ export const ENDPOINTS = {
   tools: '/api/v1/tools',
   agent: {
     loop: '/api/v1/agent/loop',
+    loopAsync: '/api/v1/agent/loop/async',
   },
   static: {
     scan: '/api/v1/static/scan',
+    scanAsync: '/api/v1/static/scan/async',
   },
   auth: {
     login: '/api/v1/auth/login',
@@ -29,6 +31,7 @@ export const ENDPOINTS = {
   scans: {
     list: '/api/v1/scans',
     detail: (id: string) => `/api/v1/scans/${id}`,
+    cancel: (id: string) => `/api/v1/scans/${id}/cancel`,
   },
   llm: {
     options: '/api/v1/llm/options',
