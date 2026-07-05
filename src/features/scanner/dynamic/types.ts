@@ -61,3 +61,11 @@ export type AgentLoopResponse = {
   message: string
   success: boolean
 }
+
+// Response from the async start endpoint; the scan runs in the background and is
+// polled via GET /scans/:id.
+export type StartScanResponse = {
+  data?: { scan_id: string; session_id: string; status: string }
+  message?: string
+  success?: boolean
+}

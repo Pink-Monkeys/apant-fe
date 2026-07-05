@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { toast } from 'sonner'
@@ -23,10 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
+import { Ban } from 'lucide-react'
 import {
+  cancelScan,
   getScanTypes,
   scanTypesQueryKey,
-  startAgentLoop,
+  startAgentLoopAsync,
 } from '#/features/scanner/dynamic/api/dynamic-scanner-api'
 import {
   buildAgentLoopPayload,
@@ -38,7 +40,12 @@ import {
   type AuthMethod,
   type DynamicScannerFormValues,
 } from '#/features/scanner/dynamic/schemas/dynamic-scanner-schema'
-import type { AgentLoopPayload, AgentLoopResponse } from '#/features/scanner/dynamic/types'
+import type { AgentLoopPayload, StartScanResponse } from '#/features/scanner/dynamic/types'
+import { getScanById, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
+import type { ScanStatus } from '#/features/scanner/list/types'
+import { getActiveScanId, setActiveScanId } from '#/features/scanner/dynamic/active-scan'
+import { scanDetailToAgentLoopData } from '#/features/scanner/dynamic/scan-adapter'
+import { ScanStatusBanner } from '#/features/scanner/components/scan-status-banner'
 import { getErrorMessage, type HttpError } from '#/types/http'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
 import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
@@ -47,8 +54,9 @@ import { AuthSection } from './auth-section'
 import DynamicScannerProcess from './dynamic-scanner-process'
 
 export default function DynamicScannerForm() {
-  const [latestResponse, setLatestResponse] = useState<AgentLoopResponse | null>(null)
-  const [elapsedMs, setElapsedMs] = useState(0)
+  // Id of the scan being watched. Seeded from localStorage so a running (or
+  // finished) scan resumes after a refresh, navigation, or logout.
+  const [activeScanId, setActiveScanIdState] = useState<string | null>(() => getActiveScanId())
   const [auth, setAuth] = useState<AuthFormValues>(defaultAuthValues)
   const [authErrors, setAuthErrors] = useState<Partial<Record<AuthFieldName, string>>>({})
 
@@ -102,36 +110,84 @@ export default function DynamicScannerForm() {
     return result.success ? undefined : result.error.issues[0]?.message
   }
 
-  const mutation = useMutation<AgentLoopResponse, HttpError, AgentLoopPayload>({
-    mutationFn: startAgentLoop,
+  const setActiveScan = (id: string | null) => {
+    setActiveScanId(id)
+    setActiveScanIdState(id)
+  }
+
+  const startMutation = useMutation<StartScanResponse, HttpError, AgentLoopPayload>({
+    mutationFn: startAgentLoopAsync,
     onSuccess: (response) => {
-      setLatestResponse(response)
-
-      if (import.meta.env.DEV) {
-        console.log('Dynamic scan response:', response)
+      const scanId = response.data?.scan_id
+      if (scanId) {
+        setActiveScan(scanId)
       }
-
-      toast.success(response.message || 'Dynamic scan submitted')
+      toast.success('Scan started')
     },
     onError: (error) => {
-      const message = getErrorMessage(error.data, error.message)
-      toast.error(message)
+      toast.error(getErrorMessage(error.data, error.message))
     },
   })
 
+  // Poll the active scan while it is running; stop once it reaches a terminal
+  // status. Works across refresh/logout because the scan lives in the DB.
+  const { data: scan } = useQuery({
+    queryKey: scanListQueryKeys.detail(activeScanId ?? ''),
+    queryFn: () => getScanById(activeScanId as string),
+    enabled: Boolean(activeScanId),
+    refetchInterval: (query) => (query.state.data?.status === 'running' ? 3000 : false),
+  })
+
+  const status = scan?.status
+  const isRunning = status === 'running'
+
+  const cancelMutation = useMutation<void, HttpError, string>({
+    mutationFn: cancelScan,
+    onSuccess: () => {
+      toast.success('Cancelling…')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error.data, error.message))
+    },
+  })
+
+  // Toast exactly once per terminal-status transition (not on every poll).
+  const notifiedStatusRef = useRef<ScanStatus | null>(null)
   useEffect(() => {
-    if (!mutation.isPending) {
+    if (!status || status === 'running') {
       return
     }
+    if (notifiedStatusRef.current === status) {
+      return
+    }
+    notifiedStatusRef.current = status
+    if (status === 'failed') {
+      toast.error(scan?.error || 'Scan failed')
+    } else if (status === 'cancelled') {
+      toast.info('Scan cancelled')
+    }
+  }, [status, scan?.error])
 
-    setElapsedMs(0)
-    const start = Date.now()
-    const intervalId = window.setInterval(() => {
-      setElapsedMs(Date.now() - start)
-    }, 1000)
+  // Reset the transition guard whenever a new scan begins.
+  useEffect(() => {
+    notifiedStatusRef.current = null
+  }, [activeScanId])
 
+  // Elapsed time derived from the scan's creation timestamp while running; frozen
+  // to the reported duration once terminal is not tracked here (kept simple).
+  const [elapsedMs, setElapsedMs] = useState(0)
+  useEffect(() => {
+    if (!scan || !isRunning) {
+      return
+    }
+    const startedAt = new Date(scan.created_at).getTime()
+    const tick = () => setElapsedMs(Date.now() - startedAt)
+    tick()
+    const intervalId = window.setInterval(tick, 1000)
     return () => window.clearInterval(intervalId)
-  }, [mutation.isPending])
+  }, [scan, isRunning])
+
+  const processData = scan ? scanDetailToAgentLoopData(scan) : null
 
   const defaultValues: DynamicScannerFormValues = {
     address: '',
@@ -142,7 +198,7 @@ export default function DynamicScannerForm() {
   const form = useForm({
     defaultValues,
     onSubmit: async ({ value }) => {
-      if (mutation.isPending) {
+      if (startMutation.isPending || isRunning) {
         return
       }
 
@@ -157,9 +213,8 @@ export default function DynamicScannerForm() {
         return
       }
 
-      setLatestResponse(null)
       const selection = resolveSelection(llmSelection ?? null, llmOptions)
-      await mutation.mutateAsync(buildAgentLoopPayload(result.data, auth, selection))
+      await startMutation.mutateAsync(buildAgentLoopPayload(result.data, auth, selection))
     },
   })
 
@@ -308,29 +363,37 @@ export default function DynamicScannerForm() {
           </CardContent>
           <CardFooter className="mt-6 gap-2">
             <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <>
-                  <Button type="submit" disabled={mutation.isPending || isSubmitting}>
-                    {mutation.isPending || isSubmitting ? 'Submitting...' : 'Submit'}
-                  </Button>
-                  <Button
-                    type="reset"
-                    variant="outline"
-                    disabled={mutation.isPending || isSubmitting}
-                  >
-                    Reset
-                  </Button>
-                </>
-              )}
+              {(isSubmitting) => {
+                const isStarting = startMutation.isPending || isSubmitting
+                return (
+                  <>
+                    <Button type="submit" disabled={isStarting || isRunning}>
+                      {isRunning ? 'Scan running…' : isStarting ? 'Submitting...' : 'Submit'}
+                    </Button>
+                    {isRunning ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={cancelMutation.isPending || !activeScanId}
+                        onClick={() => activeScanId && cancelMutation.mutate(activeScanId)}
+                      >
+                        <Ban className="size-4" />
+                        {cancelMutation.isPending ? 'Cancelling…' : 'Cancel Scan'}
+                      </Button>
+                    ) : (
+                      <Button type="reset" variant="outline" disabled={isStarting}>
+                        Reset
+                      </Button>
+                    )}
+                  </>
+                )
+              }}
             </form.Subscribe>
           </CardFooter>
         </form>
       </Card>
-      <DynamicScannerProcess
-        response={latestResponse?.data ?? null}
-        isLoading={mutation.isPending}
-        elapsedMs={elapsedMs}
-      />
+      {status ? <ScanStatusBanner status={status} error={scan?.error} /> : null}
+      <DynamicScannerProcess response={processData} isLoading={isRunning} elapsedMs={elapsedMs} />
     </div>
   )
 }
