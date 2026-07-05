@@ -166,6 +166,9 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
             {report.metadata.provider} / {report.metadata.model}
           </span>
         </MetaItem>
+        <MetaItem label="Pentested by">
+          <span className="font-medium">{report.username || '—'}</span>
+        </MetaItem>
       </div>
 
       {/* Executive Summary */}

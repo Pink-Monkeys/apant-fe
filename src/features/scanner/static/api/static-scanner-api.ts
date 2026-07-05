@@ -1,26 +1,13 @@
 import { getCsrfToken } from '#/features/auth/api/auth-api'
 import { ENDPOINTS } from '#/services/endpoints'
 import { request } from '#/services/http/client'
-import type { StaticScanResponse, StartStaticScanResponse } from '#/features/scanner/static/types'
+import type { StartStaticScanResponse } from '#/features/scanner/static/types'
 
 function hasCsrfCookie(): boolean {
   if (typeof document === 'undefined') {
     return false
   }
   return document.cookie.split(';').some((cookie) => cookie.trim().startsWith('apant_csrf='))
-}
-
-// Runs a synchronous SAST analysis on an uploaded .zip archive. The request can
-// take several minutes; no client timeout is imposed so it is not aborted early.
-export async function runStaticScan(formData: FormData): Promise<StaticScanResponse> {
-  if (!hasCsrfCookie()) {
-    await getCsrfToken()
-  }
-
-  return request<StaticScanResponse>(ENDPOINTS.static.scan, {
-    method: 'POST',
-    body: formData,
-  })
 }
 
 // Starts a SAST scan in the background (returns 202 immediately after upload).
@@ -30,7 +17,7 @@ export async function startStaticScanAsync(formData: FormData): Promise<StartSta
     await getCsrfToken()
   }
 
-  return request<StartStaticScanResponse>(ENDPOINTS.static.scanAsync, {
+  return request<StartStaticScanResponse>(ENDPOINTS.static.scan, {
     method: 'POST',
     body: formData,
   })

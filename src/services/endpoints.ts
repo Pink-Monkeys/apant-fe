@@ -6,13 +6,11 @@ export const ENDPOINTS = {
   health: '/api/v1/health',
   scanTypes: '/api/v1/scan-types',
   tools: '/api/v1/tools',
-  agent: {
-    loop: '/api/v1/agent/loop',
-    loopAsync: '/api/v1/agent/loop/async',
+  dynamic: {
+    scan: '/api/v1/dynamic/scan',
   },
   static: {
     scan: '/api/v1/static/scan',
-    scanAsync: '/api/v1/static/scan/async',
   },
   auth: {
     login: '/api/v1/auth/login',

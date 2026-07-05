@@ -9,6 +9,10 @@ export type Scan = {
   total_steps: number
   duration: string
   created_at: string
+  user_id: string
+  // Snapshot of the account that ran the scan; empty for scans created before
+  // this was recorded.
+  username?: string
 }
 
 export type ListScansResponse = {
@@ -45,6 +49,7 @@ export type ScanDetail = {
   id: string
   session_id: string
   user_id: string
+  username?: string
   target: string
   target_info?: ScanTargetInfo
   provider: string

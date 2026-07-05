@@ -85,6 +85,9 @@ export type Report = {
   id: string
   session_id?: string
   user_id?: string
+  // Snapshot of the account that ran the scan; empty for reports created before
+  // this was recorded. Survives user rename/deletion.
+  username?: string
   created_at: string
   scan_id?: string
   title: string

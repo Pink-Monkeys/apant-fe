@@ -13,6 +13,7 @@ import { Search, Loader2 } from 'lucide-react'
 import { getScans, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
 import { getScanColumns } from '#/features/scanner/list/components/scan-list-columns'
 import type { Scan } from '#/features/scanner/list/types'
+import { useIsAdmin } from '#/features/auth/hooks/use-is-admin'
 import { shortId } from '#/lib/utils'
 import { DataTable } from '#/components/ui/data-table'
 import { DataTablePagination } from '#/components/ui/data-table-pagination'
@@ -21,6 +22,7 @@ import { Input } from '#/components/ui/input'
 
 export default function ScanListTable() {
   const navigate = useNavigate()
+  const isAdmin = useIsAdmin()
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 })
   const [searchQuery, setSearchQuery] = useState('')
@@ -55,13 +57,16 @@ export default function ScanListTable() {
     )
   }, [scans, searchQuery])
 
-  // Setup columns
+  // Setup columns. The Owner column is admin-only.
   const columns = useMemo(
     () =>
-      getScanColumns({
-        onViewDetail: handleViewDetail,
-      }),
-    []
+      getScanColumns(
+        {
+          onViewDetail: handleViewDetail,
+        },
+        { isAdmin }
+      ),
+    [isAdmin]
   )
 
   const table = useReactTable({
