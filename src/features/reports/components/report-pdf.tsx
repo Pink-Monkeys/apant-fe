@@ -376,13 +376,13 @@ export function ReportDocument({ report }: { report: Report }) {
                   vuln.poc.response,
                 ].some((v) => typeof v === 'string' && v.trim().length > 0)
 
-              // Only show Code Location when it adds info beyond `location` (i.e. a
-              // snippet or rule id); plain file_path/line_start duplicates location.
+              // Show Code Evidence for SAST findings: a snippet, or at least a file
+              // path so the location is still reported when no snippet is available.
               const cl = vuln.code_location
               const hasCodeLocation =
                 !!cl &&
                 ((cl.code_snippet?.trim()?.length ?? 0) > 0 ||
-                  (cl.rule_id?.trim()?.length ?? 0) > 0)
+                  (cl.file_path?.trim()?.length ?? 0) > 0)
 
               return (
                 <View key={vuln.id} style={styles.vulnCard} wrap={false}>
@@ -413,22 +413,6 @@ export function ReportDocument({ report }: { report: Report }) {
                     ]}
                   />
 
-                  {hasCodeLocation && cl ? (
-                    <>
-                      <Text style={styles.fieldLabel}>Code Location</Text>
-                      <View style={styles.pocBlock}>
-                        <Text style={styles.pocText}>
-                          {cl.file_path}:{cl.line_start}
-                          {cl.line_end ? `-${cl.line_end}` : ''}
-                          {cl.rule_id ? ` (rule: ${cl.rule_id})` : ''}
-                        </Text>
-                        {cl.code_snippet && cl.code_snippet.trim().length > 0 ? (
-                          <Text style={styles.pocText}>{cl.code_snippet}</Text>
-                        ) : null}
-                      </View>
-                    </>
-                  ) : null}
-
                   {vuln.description ? (
                     <>
                       <Text style={styles.fieldLabel}>Description</Text>
@@ -440,6 +424,22 @@ export function ReportDocument({ report }: { report: Report }) {
                     <>
                       <Text style={styles.fieldLabel}>Impact</Text>
                       <Text style={styles.paragraph}>{vuln.impact}</Text>
+                    </>
+                  ) : null}
+
+                  {hasCodeLocation && cl ? (
+                    <>
+                      <Text style={styles.fieldLabel}>Code Evidence</Text>
+                      <View style={styles.pocBlock}>
+                        <Text style={styles.pocText}>
+                          {cl.file_path}:{cl.line_start}
+                          {cl.line_end ? `-${cl.line_end}` : ''}
+                          {cl.rule_id ? ` (rule: ${cl.rule_id})` : ''}
+                        </Text>
+                        {cl.code_snippet && cl.code_snippet.trim().length > 0 ? (
+                          <Text style={styles.pocText}>{cl.code_snippet}</Text>
+                        ) : null}
+                      </View>
                     </>
                   ) : null}
 

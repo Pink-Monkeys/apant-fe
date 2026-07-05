@@ -32,6 +32,7 @@ type ReportDetailProps = {
 
 export function ReportDetail({ reportId }: ReportDetailProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedSnippetId, setCopiedSnippetId] = useState<string | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
 
   const {
@@ -49,6 +50,13 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
     setCopiedId(id)
     toast.success('cURL command copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleCopySnippet = (snippet: string, id: string) => {
+    navigator.clipboard.writeText(snippet)
+    setCopiedSnippetId(id)
+    toast.success('Code snippet copied to clipboard!')
+    setTimeout(() => setCopiedSnippetId(null), 2000)
   }
 
   // Generate the PDF on-demand (client-side) via the shared helper.
@@ -337,8 +345,70 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
                     </div>
 
                     <div className="space-y-3">
-                      {/* Proof of Concept */}
-                      {vuln.poc && (
+                      {/* Code Evidence (SAST) */}
+                      {vuln.code_location &&
+                      (vuln.code_location.code_snippet || vuln.code_location.file_path) ? (
+                        <div>
+                          <span className="text-muted-foreground mb-1 block font-medium">
+                            Code Evidence
+                          </span>
+                          <div className="border-border bg-muted border font-mono">
+                            <div className="border-border/40 text-muted-foreground flex items-center justify-between gap-2 border-b px-3 py-1.5 text-[10px]">
+                              <span className="flex flex-wrap items-center gap-1.5">
+                                {vuln.code_location.file_path ? (
+                                  <span className="break-all">
+                                    {vuln.code_location.file_path}
+                                    {vuln.code_location.line_start
+                                      ? `:${vuln.code_location.line_start}`
+                                      : ''}
+                                  </span>
+                                ) : null}
+                                {vuln.code_location.rule_id ? (
+                                  <Badge variant="outline" className="text-[9px]">
+                                    {vuln.code_location.rule_id}
+                                  </Badge>
+                                ) : null}
+                              </span>
+                              {vuln.code_location.code_snippet ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="hover:bg-background h-5 w-5 shrink-0"
+                                  onClick={() =>
+                                    handleCopySnippet(
+                                      vuln.code_location!.code_snippet ?? '',
+                                      vuln.id
+                                    )
+                                  }
+                                >
+                                  {copiedSnippetId === vuln.id ? (
+                                    <Check className="size-3 text-green-500" />
+                                  ) : (
+                                    <Copy className="size-3" />
+                                  )}
+                                </Button>
+                              ) : null}
+                            </div>
+                            {vuln.code_location.code_snippet ? (
+                              <pre className="overflow-x-auto p-3 text-[11px] leading-relaxed whitespace-pre">
+                                {vuln.code_location.code_snippet.split('\n').map((line, index) => (
+                                  <div
+                                    key={index}
+                                    className={cn(
+                                      line.startsWith('>') && 'bg-destructive/10 -mx-3 px-3'
+                                    )}
+                                  >
+                                    {line || ' '}
+                                  </div>
+                                ))}
+                              </pre>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Proof of Concept (DAST) */}
+                      {vuln.poc && (vuln.poc.url || vuln.poc.payload || vuln.poc.curl_cmd) ? (
                         <div>
                           <span className="text-muted-foreground mb-1 block font-medium">
                             Proof of Concept
@@ -373,7 +443,7 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
                             </code>
                           </div>
                         </div>
-                      )}
+                      ) : null}
 
                       <div>
                         <span className="text-muted-foreground mb-0.5 block font-medium">
