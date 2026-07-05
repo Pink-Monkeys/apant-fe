@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getReportDetail, reportsQueryKeys } from '#/features/reports/api/reports-api'
 import { downloadReportPdf } from '#/features/reports/lib/download-report-pdf'
+import { isSastReport, joinOrDash, numberOrDash } from '#/features/reports/lib/report-format'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -66,7 +67,7 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
     try {
       await downloadReportPdf(report)
     } catch (err) {
-      console.error('Failed to generate report PDF', err)
+      console.error('Failed to generate report PDF:', err instanceof Error ? err.stack : err, err)
       toast.error('Failed to generate PDF. Please try again.')
     } finally {
       setIsGeneratingPdf(false)
@@ -196,63 +197,99 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
         />
       )}
 
-      {/* Target Info + Attack Surface */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {report.target_info && (
-          <Section icon={<Server className="size-4" />} title="Target Information">
+      {/* Recon panels — SAST reports show source-analysis panels instead of the
+          DAST-oriented Target Information / Attack Surface. */}
+      {isSastReport(report.metadata.scan_type) ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Section icon={<Server className="size-4" />} title="Source Analysis">
             <InfoTable
               rows={[
-                { label: 'IP Address', value: report.target_info.ip_address || '—', mono: true },
-                { label: 'Web Server', value: report.target_info.web_server || 'Unknown' },
+                { label: 'Source', value: report.metadata.target || '—', mono: true },
+                { label: 'Tech Stack', value: joinOrDash(report.target_info?.tech_stack) },
                 {
-                  label: 'Operating System',
-                  value: report.target_info.operating_system || 'Unknown',
-                },
-                { label: 'CDN Protection', value: report.target_info.cdn?.toUpperCase() || 'None' },
-                {
-                  label: 'Tech Stack',
-                  value: report.target_info.tech_stack?.join(', ') || 'Not detected',
-                },
-                {
-                  label: 'Page Status',
-                  value: `${report.target_info.status_code} ${report.target_info.status}`,
+                  label: 'Files Analyzed',
+                  value: numberOrDash(report.attack_surface?.files_analyzed),
+                  mono: true,
                 },
               ]}
             />
           </Section>
-        )}
 
-        {report.attack_surface && (
-          <Section icon={<Globe className="size-4" />} title="Attack Surface Mapping">
+          <Section icon={<Globe className="size-4" />} title="Scan Coverage">
             <InfoTable
               rows={[
+                { label: 'Tools Used', value: joinOrDash(report.metadata.tools_used) },
                 {
-                  label: 'URLs Crawled',
-                  value: String(report.attack_surface.urls_crawled),
+                  label: 'Agent Steps',
+                  value: numberOrDash(report.metadata.total_steps),
                   mono: true,
                 },
-                {
-                  label: 'Parameterized Endpoints',
-                  value: String(report.attack_surface.parameterized_endpoints),
-                  mono: true,
-                },
-                {
-                  label: 'Open Ports Found',
-                  value: String(report.attack_surface.open_ports_count),
-                  mono: true,
-                },
-                {
-                  label: 'Subdomains Found',
-                  value: String(report.attack_surface.subdomains_found),
-                  mono: true,
-                },
-                { label: 'Tools Executed', value: report.metadata.tools_used.join(', ') },
-                { label: 'Agent Steps', value: String(report.metadata.total_steps), mono: true },
+                { label: 'Duration', value: report.metadata.duration || '—' },
               ]}
             />
           </Section>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {report.target_info && (
+            <Section icon={<Server className="size-4" />} title="Target Information">
+              <InfoTable
+                rows={[
+                  { label: 'IP Address', value: report.target_info.ip_address || '—', mono: true },
+                  { label: 'Web Server', value: report.target_info.web_server || 'Unknown' },
+                  {
+                    label: 'Operating System',
+                    value: report.target_info.operating_system || 'Unknown',
+                  },
+                  {
+                    label: 'CDN Protection',
+                    value: report.target_info.cdn?.toUpperCase() || 'None',
+                  },
+                  {
+                    label: 'Tech Stack',
+                    value: report.target_info.tech_stack?.join(', ') || 'Not detected',
+                  },
+                  {
+                    label: 'Page Status',
+                    value: `${report.target_info.status_code} ${report.target_info.status}`,
+                  },
+                ]}
+              />
+            </Section>
+          )}
+
+          {report.attack_surface && (
+            <Section icon={<Globe className="size-4" />} title="Attack Surface Mapping">
+              <InfoTable
+                rows={[
+                  {
+                    label: 'URLs Crawled',
+                    value: String(report.attack_surface.urls_crawled),
+                    mono: true,
+                  },
+                  {
+                    label: 'Parameterized Endpoints',
+                    value: String(report.attack_surface.parameterized_endpoints),
+                    mono: true,
+                  },
+                  {
+                    label: 'Open Ports Found',
+                    value: String(report.attack_surface.open_ports_count),
+                    mono: true,
+                  },
+                  {
+                    label: 'Subdomains Found',
+                    value: String(report.attack_surface.subdomains_found),
+                    mono: true,
+                  },
+                  { label: 'Tools Executed', value: report.metadata.tools_used.join(', ') },
+                  { label: 'Agent Steps', value: String(report.metadata.total_steps), mono: true },
+                ]}
+              />
+            </Section>
+          )}
+        </div>
+      )}
 
       {/* Vulnerabilities */}
       <Section

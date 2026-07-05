@@ -10,7 +10,18 @@ export async function downloadReportPdf(report: Report): Promise<void> {
     import('#/features/reports/components/report-pdf'),
   ])
 
-  const blob = await pdf(<ReportDocument report={report} />).toBlob()
+  // @react-pdf can throw a layout error ("unsupported number") on very large
+  // reports where a finding card cannot be placed across pages. Retry once with
+  // the compact layout (breakable cards + tighter snippet caps) so the download
+  // still succeeds rather than failing outright.
+  let blob: Blob
+  try {
+    blob = await pdf(<ReportDocument report={report} />).toBlob()
+  } catch (err) {
+    console.error('Report PDF render failed; retrying with compact layout:', err)
+    blob = await pdf(<ReportDocument report={report} compact />).toBlob()
+  }
+
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url

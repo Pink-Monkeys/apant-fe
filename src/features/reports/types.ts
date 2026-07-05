@@ -45,6 +45,8 @@ export type AttackSurface = {
   urls_crawled: number
   parameterized_endpoints: number
   open_ports_count: number
+  // Populated for static (SAST) scans; absent/0 for dynamic scans.
+  files_analyzed?: number
 }
 
 export type VulnerabilityPoC = {
