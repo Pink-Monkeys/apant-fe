@@ -22,10 +22,13 @@ import {
 import type { StartStaticScanResponse } from '#/features/scanner/static/types'
 import { cancelScan } from '#/features/scanner/dynamic/api/dynamic-scanner-api'
 import { getScanById, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
-import type { ScanStatus } from '#/features/scanner/list/types'
 import { scanDetailToAgentLoopData } from '#/features/scanner/dynamic/scan-adapter'
 import { ScanStatusBanner } from '#/features/scanner/components/scan-status-banner'
-import { getActiveStaticScanId, setActiveStaticScanId } from '#/features/scanner/static/active-scan'
+import {
+  clearActiveStaticScanId,
+  getActiveStaticScanId,
+  setActiveStaticScanId,
+} from '#/features/scanner/static/active-scan'
 import { getErrorMessage, type HttpError } from '#/types/http'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
 import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
@@ -97,27 +100,44 @@ export default function StaticScannerForm() {
     },
   })
 
-  // Toast exactly once per terminal-status transition (not on every poll).
-  const notifiedStatusRef = useRef<ScanStatus | null>(null)
+  // Toast only on a real running → terminal transition within this session, so a
+  // resumed (already-terminal) scan after refresh does not re-toast.
+  const sawRunningRef = useRef(false)
+  const notifiedRef = useRef(false)
   useEffect(() => {
-    if (!status || status === 'running') {
+    if (status === 'running') {
+      sawRunningRef.current = true
       return
     }
-    if (notifiedStatusRef.current === status) {
+    if (!status) {
       return
     }
-    notifiedStatusRef.current = status
-    if (status === 'failed') {
-      toast.error(scan?.error || 'Scan failed')
-    } else if (status === 'cancelled') {
-      toast.info('Scan cancelled')
+    if (sawRunningRef.current && !notifiedRef.current) {
+      notifiedRef.current = true
+      if (status === 'failed') {
+        toast.error(scan?.error || 'Scan failed')
+      } else if (status === 'cancelled') {
+        toast.info('Scan cancelled')
+      } else if (status === 'completed') {
+        toast.success('Scan completed')
+      }
     }
   }, [status, scan?.error])
 
-  // Reset the transition guard whenever a new scan begins.
+  // Reset the transition guards whenever a new scan begins.
   useEffect(() => {
-    notifiedStatusRef.current = null
+    sawRunningRef.current = false
+    notifiedRef.current = false
   }, [activeScanId])
+
+  // Once terminal, drop the persisted id so the next refresh starts clean. React
+  // state is left intact so the finished results stay visible this session; the
+  // full record remains available in Scan List.
+  useEffect(() => {
+    if (status && status !== 'running') {
+      clearActiveStaticScanId()
+    }
+  }, [status])
 
   // Elapsed time derived from the scan's creation timestamp while running.
   const [elapsedMs, setElapsedMs] = useState(0)

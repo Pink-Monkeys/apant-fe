@@ -24,6 +24,8 @@ export function ProtectedLayout({ header, children }: ProtectedLayoutProps) {
   })
   const displayName =
     session?.user.username ?? session?.user.email ?? `User-${session?.user.id ?? 'Guest'}`
+  const role = session?.user.role ?? 'pentester'
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1)
 
   return (
     <SidebarProvider>
@@ -33,7 +35,9 @@ export function ProtectedLayout({ header, children }: ProtectedLayoutProps) {
           <div className="flex h-14 items-center gap-2 px-4 md:px-6">
             {header}
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-sm font-bold">Hi, Pentester {displayName}!</span>
+              <span className="text-sm font-bold">
+                Hi, {roleLabel} {displayName}!
+              </span>
               <ThemeToggleButton />
             </div>
           </div>

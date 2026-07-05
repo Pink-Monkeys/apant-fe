@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Column, ColumnDef } from '@tanstack/react-table'
+import type { Column, ColumnDef, Row } from '@tanstack/react-table'
 import {
   ArrowUpDown,
   Ellipsis,
@@ -79,7 +79,16 @@ export type ReportColumnCallbacks = {
   onCompare: (report: Report) => void
 }
 
-export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Report>[] => [
+export type ReportColumnOptions = {
+  // Whether to include the admin-only "Pentester" column. Hidden for pentesters
+  // since every row would be their own account.
+  isAdmin?: boolean
+}
+
+export const getReportColumns = (
+  callbacks: ReportColumnCallbacks,
+  options: ReportColumnOptions = {}
+): ColumnDef<Report>[] => [
   {
     accessorKey: 'id',
     header: ({ column }) => renderSortableHeader(column, 'ID'),
@@ -198,6 +207,18 @@ export const getReportColumns = (callbacks: ReportColumnCallbacks): ColumnDef<Re
       )
     },
   },
+  ...(options.isAdmin
+    ? [
+        {
+          accessorKey: 'username',
+          header: ({ column }: { column: Column<Report> }) =>
+            renderSortableHeader(column, 'Pentester'),
+          cell: ({ row }: { row: Row<Report> }) => (
+            <span className="text-xs font-medium">{row.original.username || '—'}</span>
+          ),
+        } satisfies ColumnDef<Report>,
+      ]
+    : []),
   {
     id: 'actions',
     header: 'Actions',

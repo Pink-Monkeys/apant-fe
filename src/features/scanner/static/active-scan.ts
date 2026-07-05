@@ -29,3 +29,9 @@ export function setActiveStaticScanId(id: string | null): void {
     // Storage unavailable (private mode/quota); resume simply won't persist.
   }
 }
+
+// Removes only the persisted id (not React state) so a finished scan stays on
+// screen this session but is not resumed on the next refresh.
+export function clearActiveStaticScanId(): void {
+  setActiveStaticScanId(null)
+}

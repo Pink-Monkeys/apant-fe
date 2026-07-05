@@ -1,4 +1,4 @@
-import type { Column, ColumnDef } from '@tanstack/react-table'
+import type { Column, ColumnDef, Row } from '@tanstack/react-table'
 import { ArrowUpDown, Ellipsis, Eye } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -38,7 +38,16 @@ export type ScanColumnCallbacks = {
   onViewDetail: (scan: Scan) => void
 }
 
-export const getScanColumns = (callbacks: ScanColumnCallbacks): ColumnDef<Scan>[] => [
+export type ScanColumnOptions = {
+  // Whether to include the admin-only "Owner" column. Hidden for pentesters
+  // since every row would be their own account.
+  isAdmin?: boolean
+}
+
+export const getScanColumns = (
+  callbacks: ScanColumnCallbacks,
+  options: ScanColumnOptions = {}
+): ColumnDef<Scan>[] => [
   {
     accessorKey: 'id',
     header: ({ column }) => renderSortableHeader(column, 'ID'),
@@ -130,6 +139,17 @@ export const getScanColumns = (callbacks: ScanColumnCallbacks): ColumnDef<Scan>[
       )
     },
   },
+  ...(options.isAdmin
+    ? [
+        {
+          accessorKey: 'username',
+          header: ({ column }: { column: Column<Scan> }) => renderSortableHeader(column, 'Owner'),
+          cell: ({ row }: { row: Row<Scan> }) => (
+            <span className="text-xs font-medium">{row.original.username || '—'}</span>
+          ),
+        } satisfies ColumnDef<Scan>,
+      ]
+    : []),
   {
     id: 'actions',
     header: 'Actions',

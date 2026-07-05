@@ -25,6 +25,7 @@ import { ReportStatsCards } from '#/features/reports/components/report-stats-car
 import { ReportsCharts } from '#/features/reports/components/reports-charts'
 import { ReportsSummary } from '#/features/reports/components/reports-summary'
 import type { Report } from '#/features/reports/types'
+import { useIsAdmin } from '#/features/auth/hooks/use-is-admin'
 import { shortId } from '#/lib/utils'
 import { Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -32,6 +33,7 @@ import { toast } from 'sonner'
 export function ReportsTable() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const isAdmin = useIsAdmin()
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 })
   const [searchQuery, setSearchQuery] = useState('')
@@ -108,16 +110,19 @@ export function ReportsTable() {
     )
   }, [reports, searchQuery])
 
-  // Set up columns with callbacks
+  // Set up columns with callbacks. The Pentester column is admin-only.
   const columns = useMemo(
     () =>
-      getReportColumns({
-        onViewDetail: handleViewDetail,
-        onDownloadPdf: handleDownloadPdf,
-        onDelete: handleDelete,
-        onCompare: handleCompare,
-      }),
-    []
+      getReportColumns(
+        {
+          onViewDetail: handleViewDetail,
+          onDownloadPdf: handleDownloadPdf,
+          onDelete: handleDelete,
+          onCompare: handleCompare,
+        },
+        { isAdmin }
+      ),
+    [isAdmin]
   )
 
   const table = useReactTable({

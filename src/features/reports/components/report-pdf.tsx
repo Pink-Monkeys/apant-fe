@@ -326,6 +326,7 @@ export function ReportDocument({ report }: { report: Report }) {
                 value: metadata.scan_date ? formatDate(metadata.scan_date) : '',
               },
               { label: 'Duration', value: metadata.duration ?? '' },
+              { label: 'Pentested by', value: report.username || '—' },
               {
                 label: 'Provider / Model',
                 value: `${metadata.provider ?? ''} / ${metadata.model ?? ''}`.replace(/^ \/ $/, ''),
