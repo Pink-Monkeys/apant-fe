@@ -492,7 +492,7 @@ export function ReportDocument({ report, compact = false }: { report: Report; co
                       { label: 'Type', value: vuln.type ?? '' },
                       { label: 'Location', value: vuln.location ?? '' },
                       {
-                        label: 'CVSS Score',
+                        label: 'CVSS Base Score',
                         value:
                           typeof vuln.cvss_score === 'number' && vuln.cvss_score > 0
                             ? vuln.cvss_score.toFixed(1)
