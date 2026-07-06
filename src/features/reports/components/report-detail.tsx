@@ -328,8 +328,11 @@ export function ReportDetail({ reportId }: ReportDetailProps) {
                       {vulnSevKey}
                     </Badge>
                     {showCvss && (
-                      <Badge className={cn('border-transparent text-[10px]', vulnStyle.badge)}>
-                        CVSS {cvssScore.toFixed(1)}
+                      <Badge
+                        className={cn('border-transparent text-[10px]', vulnStyle.badge)}
+                        title="CVSS Base Score — worst-case technical severity, not the confirmed risk or this finding's severity."
+                      >
+                        CVSS {cvssScore.toFixed(1)} Base
                       </Badge>
                     )}
                     {vuln.verified && (
