@@ -133,8 +133,11 @@ function buildRemediationGroups(reportDetails: Array<Report | undefined>): Remed
 }
 
 export function useRemediation(): RemediationData {
-  const reportsQuery = useQuery({ queryKey: reportsQueryKeys.all, queryFn: getReports })
-  const reports = reportsQuery.data ?? []
+  const reportsQuery = useQuery({
+    queryKey: reportsQueryKeys.all,
+    queryFn: () => getReports({ limit: 0 }),
+  })
+  const reports = reportsQuery.data?.reports ?? []
 
   // Detail carries vulnerabilities[]; the queryKey is shared with the dashboard
   // Top Categories aggregation so the cache is reused (no duplicate requests).

@@ -7,12 +7,15 @@ const pageSizeOptions = [5, 10, 20, 25, 30, 40, 50] as const
 
 type DataTablePaginationProps<TData> = {
   table: TanstackTable<TData>
+  // For manual (server-side) pagination the row model only ever holds the
+  // current page, so the total row count must come from the API response.
+  totalRowsOverride?: number
 }
 
-function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
+function DataTablePagination<TData>({ table, totalRowsOverride }: DataTablePaginationProps<TData>) {
   const pageIndex = table.getState().pagination.pageIndex
   const pageSize = table.getState().pagination.pageSize
-  const totalRows = table.getFilteredRowModel().rows.length
+  const totalRows = totalRowsOverride ?? table.getFilteredRowModel().rows.length
   const selectedRows = table.getFilteredSelectedRowModel().rows.length
   const pageCount = table.getPageCount() || 1
 

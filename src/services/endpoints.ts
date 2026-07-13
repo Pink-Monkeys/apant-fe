@@ -25,6 +25,12 @@ export const ENDPOINTS = {
   reports: {
     list: '/api/v1/reports',
     detail: (id: string) => `/api/v1/reports/${id}`,
+    targets: '/api/v1/reports/targets',
+  },
+  dashboard: {
+    summary: '/api/v1/dashboard/summary',
+    topCategories: '/api/v1/dashboard/top-categories',
+    scanRanking: '/api/v1/dashboard/scan-ranking',
   },
   scans: {
     list: '/api/v1/scans',
