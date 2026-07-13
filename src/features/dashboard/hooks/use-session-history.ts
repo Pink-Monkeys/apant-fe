@@ -16,9 +16,12 @@ type ScanSeverity = { severity: SessionHistoryRow['severity']; createdAt: number
 
 export function useSessionHistory(): SessionHistoryRow[] {
   const scansQuery = useQuery({ queryKey: scanListQueryKeys.all, queryFn: getScans })
-  const reportsQuery = useQuery({ queryKey: reportsQueryKeys.all, queryFn: getReports })
+  const reportsQuery = useQuery({
+    queryKey: reportsQueryKeys.all,
+    queryFn: () => getReports({ limit: 0 }),
+  })
 
-  const reports = reportsQuery.data ?? []
+  const reports = reportsQuery.data?.reports ?? []
 
   // Only report DETAIL carries scan_id + overall_severity. Same queryKey as the
   // Top Categories chart, so the cache is shared (no duplicate requests).

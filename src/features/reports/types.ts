@@ -104,8 +104,21 @@ export type Report = {
   statistics: ReportStatistics
 }
 
+export type ReportsPage = {
+  reports: Report[]
+  total: number
+  page: number
+  limit: number
+}
+
 export type ListReportsResponse = {
-  data: Report[]
+  data: ReportsPage
+  message: string
+  success: boolean
+}
+
+export type ListReportTargetsResponse = {
+  data: string[]
   message: string
   success: boolean
 }

@@ -1,10 +1,11 @@
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
+import { useState } from 'react'
+import { useTheme } from 'next-themes'
+import { useQuery } from '@tanstack/react-query'
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from 'recharts'
 import { Maximize2 } from 'lucide-react'
 
-import {
-  topCategoriesConfig,
-  topCategoryClasses,
-} from '#/components/dashboard/charts/chart-constants'
+import { dashboardQueryKeys, getTopCategories } from '#/features/dashboard/api/dashboard-api'
+import { topCategoriesConfig } from '#/components/dashboard/charts/chart-constants'
 import type { TopCategoryDatum } from '#/components/dashboard/charts/chart-data'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -20,6 +21,12 @@ import {
   DrawerTrigger,
 } from '#/components/ui/drawer'
 import { cn } from '#/lib/utils'
+import {
+  colorForCategory,
+  severityBandLegend,
+  type CategoryColorMode,
+} from '#/components/dashboard/charts/category-severity-colors'
+import type { TimeRangeSearch } from '#/types/time-filter'
 
 const MAX_LINE_CHARS = 16
 
@@ -83,9 +90,44 @@ function CategoriesEmptyState({ className }: { className?: string }) {
   )
 }
 
+// Legend for the two-dimensional color scheme: hue = severity band (violet =
+// Critical … blue = Low), and within each band a darker shade means a higher
+// avg CVSS. It doubles as the secondary encoding that makes the hues readable
+// under color-vision deficiency (violet↔blue are close under deuteranopia).
+function SeverityBandLegend({ mode, className }: { mode: CategoryColorMode; className?: string }) {
+  const bands = severityBandLegend(mode)
+  return (
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {bands.map((band) => (
+          <div key={band.label} className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-[2px]" style={{ backgroundColor: band.color }} />
+            <span className="text-muted-foreground text-[10px] font-medium">
+              {band.label}{' '}
+              <span className="text-muted-foreground/70 font-normal">CVSS {band.range}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <span className="text-muted-foreground/70 text-[9px] leading-tight">
+        Darker shade within a color = higher average CVSS.
+      </span>
+    </div>
+  )
+}
+
 // Compact vertical bar chart for the dashboard card. Category labels sit on the
-// X axis and wrap onto two lines when long.
-function CategoriesBarChart({ data, className }: { data: TopCategoryDatum[]; className?: string }) {
+// X axis and wrap onto two lines when long. Bar color encodes avg_cvss via the
+// hybrid band-hue + shade scheme, independent of sort order/position.
+function CategoriesBarChart({
+  data,
+  mode,
+  className,
+}: {
+  data: TopCategoryDatum[]
+  mode: 'light' | 'dark'
+  className?: string
+}) {
   return (
     <ChartContainer
       className={cn('aspect-auto h-56 w-full', className)}
@@ -104,9 +146,33 @@ function CategoriesBarChart({ data, className }: { data: TopCategoryDatum[]; cla
         <YAxis axisLine={false} tickLine={false} />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent labelKey="category" hideIndicator />}
+          content={
+            <ChartTooltipContent
+              labelKey="category"
+              hideIndicator
+              formatter={(value, _name, item) => {
+                const avgCvss = (item?.payload as TopCategoryDatum | undefined)?.avgCvss ?? 0
+                return (
+                  <div className="flex w-full items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Findings</span>
+                    <span className="text-foreground font-mono font-medium tabular-nums">
+                      {value}
+                    </span>
+                    {avgCvss > 0 && (
+                      <span className="text-muted-foreground font-mono text-[11px] tabular-nums">
+                        avg CVSS {avgCvss.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                )
+              }}
+            />
+          }
         />
-        <Bar dataKey="value" className={topCategoryClasses.bar} radius={6}>
+        <Bar dataKey="value" radius={6}>
+          {data.map((entry) => (
+            <Cell key={entry.category} fill={colorForCategory(entry.avgCvss, mode)} />
+          ))}
           <LabelList
             dataKey="value"
             position="top"
@@ -124,7 +190,13 @@ const HORIZONTAL_ROW_HEIGHT = 34
 
 // Horizontal bar chart for the fullscreen drawer: category names run along the Y
 // axis (upright, no rotation) so even long names never collide.
-function CategoriesBarChartHorizontal({ data }: { data: TopCategoryDatum[] }) {
+function CategoriesBarChartHorizontal({
+  data,
+  mode,
+}: {
+  data: TopCategoryDatum[]
+  mode: 'light' | 'dark'
+}) {
   return (
     <ChartContainer
       className="aspect-auto w-full"
@@ -148,7 +220,10 @@ function CategoriesBarChartHorizontal({ data }: { data: TopCategoryDatum[] }) {
           cursor={false}
           content={<ChartTooltipContent labelKey="category" hideIndicator />}
         />
-        <Bar dataKey="value" className={topCategoryClasses.bar} radius={6}>
+        <Bar dataKey="value" radius={6}>
+          {data.map((entry) => (
+            <Cell key={entry.category} fill={colorForCategory(entry.avgCvss, mode)} />
+          ))}
           <LabelList
             dataKey="value"
             position="right"
@@ -162,13 +237,28 @@ function CategoriesBarChartHorizontal({ data }: { data: TopCategoryDatum[] }) {
 
 function TopCategoriesChart({
   data,
-  allData,
+  filter,
 }: {
   data: TopCategoryDatum[]
-  allData?: TopCategoryDatum[]
+  filter: TimeRangeSearch
 }) {
-  // Fall back to the compact data when the full list isn't supplied.
-  const fullData = allData ?? data
+  const { resolvedTheme } = useTheme()
+  const mode = resolvedTheme === 'dark' ? 'dark' : 'light'
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  // Fetch the full category list only when the drawer is actually opened.
+  const allCategoriesQuery = useQuery({
+    queryKey: dashboardQueryKeys.topCategories(filter, 0),
+    queryFn: () => getTopCategories(filter, 0),
+    enabled: drawerOpen,
+  })
+  const fullData: TopCategoryDatum[] = drawerOpen
+    ? (allCategoriesQuery.data ?? []).map((item) => ({
+        category: item.category,
+        value: item.count,
+        avgCvss: item.avg_cvss,
+      }))
+    : data
 
   return (
     <Card className="border-chart-1 h-full w-full border">
@@ -179,30 +269,38 @@ function TopCategoriesChart({
             Showing the Most Frequently Appearing Vulnerability Categories
           </CardDescription>
         </div>
-        <Drawer direction="bottom">
+        <Drawer direction="bottom" onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground shrink-0"
-              disabled={fullData.length === 0}
+              disabled={data.length === 0}
             >
               <Maximize2 />
-              <span className="sr-only">Expand Top Categories to fullscreen</span>
+              <span className="sr-only">Show all categories</span>
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-screen max-h-screen">
             <DrawerHeader className="text-left">
-              <DrawerTitle>Top Categories</DrawerTitle>
+              <DrawerTitle>Top Categories — All categories</DrawerTitle>
               <DrawerDescription>
-                Showing the Most Frequently Appearing Vulnerability Categories
+                Every vulnerability category found, ranked by frequency. Bar color reflects average
+                CVSS severity (calm → dark violet as danger increases).
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
-              {fullData.length === 0 ? (
+              {allCategoriesQuery.isLoading ? (
+                <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                  Loading all categories...
+                </div>
+              ) : fullData.length === 0 ? (
                 <CategoriesEmptyState className="h-full" />
               ) : (
-                <CategoriesBarChartHorizontal data={fullData} />
+                <>
+                  <SeverityBandLegend mode={mode} className="mb-3 max-w-md" />
+                  <CategoriesBarChartHorizontal data={fullData} mode={mode} />
+                </>
               )}
             </div>
             <DrawerFooter className="flex-row justify-end">
@@ -213,11 +311,14 @@ function TopCategoriesChart({
           </DrawerContent>
         </Drawer>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         {data.length === 0 ? (
           <CategoriesEmptyState className="h-56" />
         ) : (
-          <CategoriesBarChart data={data} />
+          <>
+            <CategoriesBarChart data={data} mode={mode} />
+            <SeverityBandLegend mode={mode} />
+          </>
         )}
       </CardContent>
     </Card>

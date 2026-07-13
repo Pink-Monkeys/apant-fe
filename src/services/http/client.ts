@@ -85,6 +85,18 @@ function readCookie(name: string): string | null {
   return null
 }
 
+// Builds a query string from a params object, skipping undefined/null/empty
+// values so callers can pass optional filters directly without pre-filtering.
+export function buildQueryString(params: Record<string, string | number | undefined>): string {
+  const searchParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === '') continue
+    searchParams.set(key, String(value))
+  }
+  const query = searchParams.toString()
+  return query ? `?${query}` : ''
+}
+
 function createHttpError(status: number, data: unknown, fallbackMessage: string): HttpError {
   const message = getErrorMessage(data, fallbackMessage)
   const error = new Error(message) as HttpError

@@ -10,23 +10,32 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { ProtectedLayout } from '#/components/protected-layout'
 import { SidebarTrigger } from '#/components/ui/sidebar'
+import { TimeRangeFilter } from '#/components/time-range-filter'
 import { requireAuth } from '#/features/auth/guard'
 import { useDashboardData } from '#/features/dashboard/hooks/use-dashboard-data'
-import { createFileRoute } from '@tanstack/react-router'
-import { ScanSearch, TimerReset, Users, Wrench } from 'lucide-react'
+import { timeRangeSearchSchema, type TimeRangeValue } from '#/types/time-filter'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { CalendarRange, ScanSearch, TimerReset, Users, Wrench } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => requireAuth(),
+  validateSearch: timeRangeSearchSchema,
   component: Dashboard,
 })
 
 function Dashboard() {
-  const {
-    metrics: dashboardMetrics,
-    scanRanking,
-    topCategories,
-    allCategories,
-  } = useDashboardData()
+  const navigate = useNavigate()
+  const search = Route.useSearch()
+  const filter = { range: search.range, from: search.from, to: search.to }
+
+  const { metrics: dashboardMetrics, scanRanking, topCategories } = useDashboardData(filter)
+
+  const handleTimeRangeChange = (value: TimeRangeValue | 'all') => {
+    navigate({
+      to: '/dashboard',
+      search: { range: value === 'all' ? undefined : value, from: undefined, to: undefined },
+    })
+  }
 
   const metrics = [
     {
@@ -70,6 +79,20 @@ function Dashboard() {
         </>
       }
     >
+      <section className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-sm font-semibold">Overview</h2>
+          <p className="text-muted-foreground text-xs">
+            Select a time range to filter the metrics and charts below.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <CalendarRange className="text-muted-foreground size-4" />
+          <span className="text-muted-foreground text-xs font-medium">Time range</span>
+          <TimeRangeFilter value={search.range ?? 'all'} onChange={handleTimeRangeChange} />
+        </div>
+      </section>
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((item) => (
           <Card key={item.label} className="border-primary border">
@@ -92,7 +115,7 @@ function Dashboard() {
           <ScanRankingChart data={scanRanking} />
         </div>
         <div className="flex min-w-0 lg:flex-1">
-          <TopCategoriesChart data={topCategories} allData={allCategories} />
+          <TopCategoriesChart data={topCategories} filter={filter} />
         </div>
       </section>
 

@@ -12,6 +12,7 @@ export type ScanRankingDatum = {
 export type TopCategoryDatum = {
   category: string
   value: number
+  avgCvss: number
 }
 
 const scanRankingData: ScanRankingDatum[] = [
@@ -48,11 +49,11 @@ const scanRankingData: ScanRankingDatum[] = [
 ]
 
 const topCategoriesData: TopCategoryDatum[] = [
-  { category: 'SQLi', value: 21 },
-  { category: 'XSS', value: 32 },
-  { category: 'CSRF', value: 32 },
-  { category: 'BAC', value: 10 },
-  { category: 'IDOR', value: 23 },
+  { category: 'SQLi', value: 21, avgCvss: 8.6 },
+  { category: 'XSS', value: 32, avgCvss: 6.2 },
+  { category: 'CSRF', value: 32, avgCvss: 5.4 },
+  { category: 'BAC', value: 10, avgCvss: 7.1 },
+  { category: 'IDOR', value: 23, avgCvss: 6.8 },
 ]
 
 export { scanRankingData, topCategoriesData }
