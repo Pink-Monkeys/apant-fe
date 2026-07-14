@@ -23,6 +23,7 @@ import {
   BarChart3,
 } from 'lucide-react'
 import { cn } from '#/lib/utils'
+import { ScanLiveLog } from '#/features/scanner/components/scan-live-log'
 
 type DynamicScannerProcessProps = {
   response?: AgentLoopData | null
@@ -103,11 +104,17 @@ export default function DynamicScannerProcess({
                   The agent is scanning the target. This may take several minutes.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Elapsed time:{' '}
-                <span className="text-foreground font-mono font-semibold">
-                  {formatDuration(elapsedMs)}
-                </span>
+              <CardContent className="space-y-3 text-sm">
+                <div className="text-muted-foreground">
+                  Elapsed time:{' '}
+                  <span className="text-foreground font-mono font-semibold">
+                    {formatDuration(elapsedMs)}
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium">Live activity</p>
+                  <ScanLiveLog steps={response?.steps ?? []} isRunning />
+                </div>
               </CardContent>
             </Card>
           ) : null}
