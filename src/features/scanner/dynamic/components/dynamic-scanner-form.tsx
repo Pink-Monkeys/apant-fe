@@ -51,7 +51,7 @@ import { scanDetailToAgentLoopData } from '#/features/scanner/dynamic/scan-adapt
 import { ScanStatusBanner } from '#/features/scanner/components/scan-status-banner'
 import { getErrorMessage, type HttpError } from '#/types/http'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
-import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
+import { resolveSelection, useLlmSelection } from '#/features/llm/selection'
 import { LlmIndicator } from '#/features/llm/components/llm-indicator'
 import { AuthSection } from './auth-section'
 import DynamicScannerProcess from './dynamic-scanner-process'
@@ -88,13 +88,7 @@ export default function DynamicScannerForm() {
     queryKey: llmOptionsQueryKey,
     queryFn: getLlmOptions,
   })
-  const { data: llmSelection } = useQuery({
-    queryKey: llmSelectionKey,
-    queryFn: () => getLlmSelection(),
-    initialData: () => getLlmSelection(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  })
+  const { data: llmSelection } = useLlmSelection()
 
   const defaultScanType = scanTypes[0]?.key
 

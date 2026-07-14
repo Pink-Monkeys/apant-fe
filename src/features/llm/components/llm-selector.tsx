@@ -20,7 +20,8 @@ import {
 } from '#/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
-import { firstOptionSelection, getLlmSelection, setLlmSelection } from '#/features/llm/selection'
+import { firstOptionSelection, useLlmSelection, useSetLlmSelection } from '#/features/llm/selection'
+import { getErrorMessage, type HttpError } from '#/types/http'
 
 export function LlmSelector() {
   const {
@@ -33,16 +34,18 @@ export function LlmSelector() {
     queryFn: getLlmOptions,
   })
 
+  const { data: stored } = useLlmSelection()
+  const saveSelection = useSetLlmSelection()
+
   const [providerName, setProviderName] = useState('')
   const [modelId, setModelId] = useState('')
 
-  // Seed the two selects from the persisted selection, falling back to the first
-  // available option. Runs when options load or the persisted selection changes.
+  // Seed the two selects from the persisted (backend) selection, falling back to
+  // the first available option. Runs when options or the stored selection change.
   useEffect(() => {
     if (options.length === 0) {
       return
     }
-    const stored = getLlmSelection()
     const fallback = firstOptionSelection(options)
     const provider =
       stored && options.some((option) => option.name === stored.provider)
@@ -57,7 +60,7 @@ export function LlmSelector() {
         : (providerOption?.models[0] ?? '')
     setModelId(model)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options])
+  }, [options, stored])
 
   const modelsForProvider = useMemo(
     () => options.find((option) => option.name === providerName)?.models ?? [],
@@ -75,8 +78,17 @@ export function LlmSelector() {
       toast.error('Please select a provider and model first')
       return
     }
-    setLlmSelection({ provider: providerName, model: modelId })
-    toast.success(`Active LLM: ${providerName} / ${modelId}`)
+    saveSelection.mutate(
+      { provider: providerName, model: modelId },
+      {
+        onSuccess: () => {
+          toast.success(`Active LLM: ${providerName} / ${modelId}`)
+        },
+        onError: (mutationError: HttpError) => {
+          toast.error(getErrorMessage(mutationError.data, mutationError.message))
+        },
+      }
+    )
   }
 
   if (isLoading) {
@@ -158,8 +170,12 @@ export function LlmSelector() {
         </FieldGroup>
       </CardContent>
       <CardFooter>
-        <Button type="button" onClick={handleSave} disabled={!providerName || !modelId}>
-          Save Selection
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!providerName || !modelId || saveSelection.isPending}
+        >
+          {saveSelection.isPending ? 'Saving…' : 'Save Selection'}
         </Button>
       </CardFooter>
     </Card>

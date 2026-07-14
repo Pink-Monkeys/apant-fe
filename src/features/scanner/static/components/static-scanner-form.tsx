@@ -31,7 +31,7 @@ import {
 } from '#/features/scanner/static/active-scan'
 import { getErrorMessage, type HttpError } from '#/types/http'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
-import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
+import { resolveSelection, useLlmSelection } from '#/features/llm/selection'
 import { LlmIndicator } from '#/features/llm/components/llm-indicator'
 import DynamicScannerProcess from '#/features/scanner/dynamic/components/dynamic-scanner-process'
 
@@ -51,13 +51,7 @@ export default function StaticScannerForm() {
     queryKey: llmOptionsQueryKey,
     queryFn: getLlmOptions,
   })
-  const { data: llmSelection } = useQuery({
-    queryKey: llmSelectionKey,
-    queryFn: () => getLlmSelection(),
-    initialData: () => getLlmSelection(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  })
+  const { data: llmSelection } = useLlmSelection()
 
   const setActiveScan = (id: string | null) => {
     setActiveStaticScanId(id)

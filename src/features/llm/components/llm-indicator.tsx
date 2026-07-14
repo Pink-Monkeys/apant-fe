@@ -2,20 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { BrainCircuit } from 'lucide-react'
 import { getLlmOptions, llmOptionsQueryKey } from '#/features/llm/api/llm-api'
-import { getLlmSelection, llmSelectionKey, resolveSelection } from '#/features/llm/selection'
+import { resolveSelection, useLlmSelection } from '#/features/llm/selection'
 import type { LlmSelection } from '#/features/llm/types'
 
 // Small badge shown on scan forms so the user knows which provider+model will be
-// used. Reads the persisted selection (reactive via the query cache) and the
-// available options to resolve the effective choice, with a link to change it.
+// used. Reads the per-user selection from the backend (reactive via the query
+// cache) and the available options to resolve the effective choice, with a link
+// to change it.
 export function LlmIndicator() {
-  const { data: selection } = useQuery({
-    queryKey: llmSelectionKey,
-    queryFn: () => getLlmSelection(),
-    initialData: () => getLlmSelection(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  })
+  const { data: selection } = useLlmSelection()
 
   const { data: options = [] } = useQuery({
     queryKey: llmOptionsQueryKey,

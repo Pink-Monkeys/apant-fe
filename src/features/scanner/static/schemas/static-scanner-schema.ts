@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { getLlmSelection } from '#/features/llm/selection'
 import type { LlmSelection } from '#/features/llm/types'
 
 const ZIP_EXTENSION = '.zip'
@@ -20,7 +19,7 @@ const DEFAULT_PROVIDER = 'openai'
 const DEFAULT_MODEL = 'gpt-5.4'
 
 function resolveScanLlm(selection?: LlmSelection | null): LlmSelection {
-  return selection ?? getLlmSelection() ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
+  return selection ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
 }
 
 export function buildStaticScanFormData(

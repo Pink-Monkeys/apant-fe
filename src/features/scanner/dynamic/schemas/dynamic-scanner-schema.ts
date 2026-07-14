@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import type { AgentLoopPayload, AuthConfig } from '#/features/scanner/dynamic/types'
-import { getLlmSelection } from '#/features/llm/selection'
 import type { LlmSelection } from '#/features/llm/types'
 
 // Final fallback when no LLM has been selected and no options are available, so
@@ -8,10 +7,11 @@ import type { LlmSelection } from '#/features/llm/types'
 const DEFAULT_PROVIDER = 'openai'
 const DEFAULT_MODEL = 'gpt-5.4'
 
-// Resolves which provider+model to send: an explicit (already-resolved) selection
-// from the caller, else the persisted selection, else the legacy default.
+// Resolves which provider+model to send: the caller passes an already-resolved
+// selection (from the backend selection + available options); the legacy default
+// is only used when the caller has nothing.
 function resolveScanLlm(selection?: LlmSelection | null): LlmSelection {
-  return selection ?? getLlmSelection() ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
+  return selection ?? { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL }
 }
 
 const optionalScanType = z.preprocess(

@@ -108,3 +108,11 @@ export type LlmSelection = {
   provider: string
   model: string
 }
+
+// GET/PUT /llm/selection. The selection is stored per-user on the backend
+// (scoped by JWT) and returned already validated against the enabled catalog.
+export type LlmSelectionResponse = {
+  data?: LlmSelection
+  message?: string
+  success?: boolean
+}
