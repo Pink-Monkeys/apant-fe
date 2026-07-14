@@ -68,7 +68,7 @@ type CategoryTickProps = {
 function CategoryTick({ x = 0, y = 0, payload }: CategoryTickProps) {
   const [firstLine, secondLine] = splitIntoTwoLines(String(payload?.value ?? ''))
   return (
-    <text x={x} y={y} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+    <text x={x} y={y} textAnchor="middle" className="fill-foreground text-[10px]">
       <tspan x={x} dy={10}>
         {firstLine}
       </tspan>
@@ -84,8 +84,8 @@ function CategoryTick({ x = 0, y = 0, payload }: CategoryTickProps) {
 function CategoriesEmptyState({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-col items-center justify-center gap-1 text-center', className)}>
-      <p className="text-muted-foreground text-sm">No vulnerability categories yet</p>
-      <p className="text-muted-foreground text-xs">Run a scan to populate this chart.</p>
+      <p className="text-sm">No vulnerability categories yet</p>
+      <p className="text-xs">Run a scan to populate this chart.</p>
     </div>
   )
 }
@@ -102,14 +102,13 @@ function SeverityBandLegend({ mode, className }: { mode: CategoryColorMode; clas
         {bands.map((band) => (
           <div key={band.label} className="flex items-center gap-1.5">
             <span className="size-2.5 rounded-[2px]" style={{ backgroundColor: band.color }} />
-            <span className="text-muted-foreground text-[10px] font-medium">
-              {band.label}{' '}
-              <span className="text-muted-foreground/70 font-normal">CVSS {band.range}</span>
+            <span className="text-[10px] font-medium">
+              {band.label} <span className="font-normal">CVSS {band.range}</span>
             </span>
           </div>
         ))}
       </div>
-      <span className="text-muted-foreground/70 text-[9px] leading-tight">
+      <span className="text-[9px] leading-tight">
         Darker shade within a color = higher average CVSS.
       </span>
     </div>
@@ -154,12 +153,10 @@ function CategoriesBarChart({
                 const avgCvss = (item?.payload as TopCategoryDatum | undefined)?.avgCvss ?? 0
                 return (
                   <div className="flex w-full items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Findings</span>
-                    <span className="text-foreground font-mono font-medium tabular-nums">
-                      {value}
-                    </span>
+                    <span>Findings</span>
+                    <span className="font-mono font-medium tabular-nums">{value}</span>
                     {avgCvss > 0 && (
-                      <span className="text-muted-foreground font-mono text-[11px] tabular-nums">
+                      <span className="font-mono text-[11px] tabular-nums">
                         avg CVSS {avgCvss.toFixed(1)}
                       </span>
                     )}
@@ -176,7 +173,7 @@ function CategoriesBarChart({
           <LabelList
             dataKey="value"
             position="top"
-            className="fill-foreground text-[10px] font-medium"
+            className="fill-white text-[10px] font-medium"
           />
         </Bar>
       </BarChart>
@@ -214,7 +211,9 @@ function CategoriesBarChartHorizontal({
           interval={0}
           width={240}
           tickFormatter={(value: string) => truncate(String(value).trim(), 40)}
-          className="fill-muted-foreground text-[11px]"
+          // ChartContainer forces axis ticks to fill-muted-foreground; override it
+          // on the tick text itself so category names stay legible in dark mode.
+          className="[&_.recharts-cartesian-axis-tick_text]:fill-foreground text-[11px]"
         />
         <ChartTooltip
           cursor={false}
@@ -274,7 +273,7 @@ function TopCategoriesChart({
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-muted-foreground shrink-0"
+              className="shrink-0"
               disabled={data.length === 0}
             >
               <Maximize2 />
@@ -283,15 +282,15 @@ function TopCategoriesChart({
           </DrawerTrigger>
           <DrawerContent className="h-screen max-h-screen">
             <DrawerHeader className="text-left">
-              <DrawerTitle>Top Categories — All categories</DrawerTitle>
-              <DrawerDescription>
+              <DrawerTitle>Top Categories - All categories</DrawerTitle>
+              <DrawerDescription className="text-white">
                 Every vulnerability category found, ranked by frequency. Bar color reflects average
-                CVSS severity (calm → dark violet as danger increases).
+                CVSS severity (calm to dark violet as danger increases).
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
               {allCategoriesQuery.isLoading ? (
-                <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                <div className="flex h-full items-center justify-center text-sm">
                   Loading all categories...
                 </div>
               ) : fullData.length === 0 ? (
