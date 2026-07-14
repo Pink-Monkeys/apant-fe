@@ -39,6 +39,7 @@ export const ENDPOINTS = {
   },
   llm: {
     options: '/api/v1/llm/options',
+    selection: '/api/v1/llm/selection',
     providers: '/api/v1/llm/providers',
     provider: (id: string) => `/api/v1/llm/providers/${id}`,
     testProvider: (id: string) => `/api/v1/llm/providers/${id}/test`,

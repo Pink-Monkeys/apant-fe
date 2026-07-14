@@ -9,6 +9,8 @@ import type {
   LlmProvider,
   LlmProviderResponse,
   LlmProvidersResponse,
+  LlmSelection,
+  LlmSelectionResponse,
   TestProviderEnvelope,
   TestProviderResponse,
   UpdateModelPayload,
@@ -22,6 +24,26 @@ export const llmProvidersQueryKey = ['llm', 'providers'] as const
 export async function getLlmOptions(): Promise<LlmOption[]> {
   const response = await request<LlmOptionsResponse>(ENDPOINTS.llm.options)
   return response.data ?? []
+}
+
+// ─── Per-user LLM selection (scoped by JWT on the backend) ────────────────────
+
+// Returns the user's saved provider+model. The backend validates against the
+// enabled catalog and falls back to a default when the saved model is gone or
+// the user never chose, so the result can be trusted as-is.
+export async function getLlmSelection(): Promise<LlmSelection | null> {
+  const response = await request<LlmSelectionResponse>(ENDPOINTS.llm.selection)
+  return response.data ?? null
+}
+
+// Persists the user's selection. The backend rejects (400) a provider/model that
+// is not in the enabled catalog.
+export async function setLlmSelection(payload: LlmSelection): Promise<LlmSelection | null> {
+  const response = await request<LlmSelectionResponse>(ENDPOINTS.llm.selection, {
+    method: 'PUT',
+    body: payload,
+  })
+  return response.data ?? null
 }
 
 // ─── Providers (admin only; backend returns 403 for pentesters) ───────────────
