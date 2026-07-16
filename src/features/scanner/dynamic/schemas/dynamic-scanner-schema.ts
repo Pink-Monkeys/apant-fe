@@ -146,7 +146,8 @@ export function buildAgentLoopPayload(
     model: llm.model,
     target: values.address.trim(),
     description: values.description.trim(),
-    max_steps: 15,
+    // max_steps intentionally omitted: the backend applies its own default step
+    // budget (single source of truth). See AgentLoopPayload.max_steps.
   }
 
   if (values.scanType) {

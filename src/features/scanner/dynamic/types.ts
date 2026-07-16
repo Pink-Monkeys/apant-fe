@@ -12,7 +12,9 @@ export type AgentLoopPayload = {
   target: string
   description: string
   scan_type?: string
-  max_steps: number
+  // Omitted so the backend's own default step budget governs — a single source of
+  // truth. Only send it to deliberately override that default for one scan.
+  max_steps?: number
   auth?: AuthConfig
 }
 
