@@ -28,6 +28,8 @@ export function scanDetailToAgentLoopData(scan: ScanDetail): AgentLoopData {
           ip: scan.target_info.ip ?? '',
           title: scan.target_info.title ?? '',
           status_code: scan.target_info.status_code ?? 0,
+          server: scan.target_info.server,
+          technologies: scan.target_info.technologies,
         }
       : undefined,
   }

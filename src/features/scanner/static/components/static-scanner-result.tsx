@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/com
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { severityStyles } from '#/lib/severity'
+import { ExpandableText } from '#/components/expandable-text'
 import { cn } from '#/lib/utils'
 import type { StaticScanResult } from '#/features/scanner/static/types'
 import { CheckCircle2, FileText, Loader2, MinusCircle, ShieldCheck } from 'lucide-react'
@@ -122,9 +123,9 @@ export default function StaticScannerResult({
                   <CheckCircle2 className="size-4 text-emerald-600" />
                   Confirmed
                 </h3>
-                <p className="border-border/50 bg-muted/30 border p-4 text-sm leading-relaxed whitespace-pre-line">
-                  {sections.confirmed || 'None reported.'}
-                </p>
+                <div className="border-border/50 bg-muted/30 border p-4">
+                  <ExpandableText text={sections.confirmed || 'None reported.'} />
+                </div>
               </div>
               {sections.notConfirmed ? (
                 <div className="space-y-2">
@@ -132,16 +133,19 @@ export default function StaticScannerResult({
                     <MinusCircle className="size-4" />
                     Not Confirmed
                   </h3>
-                  <p className="border-border/50 bg-muted/10 text-muted-foreground border p-4 text-sm leading-relaxed whitespace-pre-line">
-                    {sections.notConfirmed}
-                  </p>
+                  <div className="border-border/50 bg-muted/10 border p-4">
+                    <ExpandableText
+                      text={sections.notConfirmed}
+                      className="text-muted-foreground"
+                    />
+                  </div>
                 </div>
               ) : null}
             </div>
           ) : result.final_answer ? (
-            <p className="border-border/50 bg-muted/30 border p-4 text-sm leading-relaxed whitespace-pre-line">
-              {result.final_answer}
-            </p>
+            <div className="border-border/50 bg-muted/30 border p-4">
+              <ExpandableText text={result.final_answer} />
+            </div>
           ) : null}
         </CardContent>
       </Card>

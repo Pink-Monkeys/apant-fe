@@ -203,6 +203,19 @@ export function ReportsTable() {
     })
   }
 
+  const handleCustomRangeChange = (from: string, to: string) => {
+    navigate({
+      to: '/reports',
+      search: (prev) => ({
+        ...prev,
+        range: undefined,
+        from,
+        to,
+        page: 1,
+      }),
+    })
+  }
+
   const handleTargetChange = (value: string) => {
     navigate({
       to: '/reports',
@@ -250,7 +263,13 @@ export function ReportsTable() {
 
           <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <TimeRangeFilter value={search.range ?? 'all'} onChange={handleTimeRangeChange} />
+              <TimeRangeFilter
+                range={search.range ?? 'all'}
+                from={search.from}
+                to={search.to}
+                onPresetChange={handleTimeRangeChange}
+                onCustomChange={handleCustomRangeChange}
+              />
               <Select value={target ?? 'all'} onValueChange={handleTargetChange}>
                 <SelectTrigger className="sm:w-48">
                   <SelectValue placeholder="All targets" />
