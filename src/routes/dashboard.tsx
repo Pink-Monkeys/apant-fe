@@ -37,6 +37,13 @@ function Dashboard() {
     })
   }
 
+  const handleCustomRangeChange = (from: string, to: string) => {
+    navigate({
+      to: '/dashboard',
+      search: { range: undefined, from, to },
+    })
+  }
+
   const metrics = [
     {
       label: 'Total Scans',
@@ -89,7 +96,13 @@ function Dashboard() {
         <div className="flex items-center gap-2">
           <CalendarRange className="text-muted-foreground size-4" />
           <span className="text-muted-foreground text-xs font-medium">Time range</span>
-          <TimeRangeFilter value={search.range ?? 'all'} onChange={handleTimeRangeChange} />
+          <TimeRangeFilter
+            range={search.range ?? 'all'}
+            from={search.from}
+            to={search.to}
+            onPresetChange={handleTimeRangeChange}
+            onCustomChange={handleCustomRangeChange}
+          />
         </div>
       </section>
 

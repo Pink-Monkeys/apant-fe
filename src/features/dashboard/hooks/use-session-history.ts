@@ -15,7 +15,10 @@ function capitalizeSeverity(severity: string): SessionHistoryRow['severity'] {
 type ScanSeverity = { severity: SessionHistoryRow['severity']; createdAt: number }
 
 export function useSessionHistory(): SessionHistoryRow[] {
-  const scansQuery = useQuery({ queryKey: scanListQueryKeys.all, queryFn: getScans })
+  const scansQuery = useQuery({
+    queryKey: scanListQueryKeys.all,
+    queryFn: () => getScans({ limit: 0 }),
+  })
   const reportsQuery = useQuery({
     queryKey: reportsQueryKeys.all,
     queryFn: () => getReports({ limit: 0 }),
@@ -32,7 +35,7 @@ export function useSessionHistory(): SessionHistoryRow[] {
     })),
   })
 
-  const scans = scansQuery.data
+  const scans = scansQuery.data?.scans
 
   // Stable signature of the detail data so the rows below only recompute when the
   // underlying report data actually changes — not on every render.

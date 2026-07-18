@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { AgentLoopData } from '#/features/scanner/dynamic/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '#/components/ui/badge'
+import { Button } from '#/components/ui/button'
 import {
   Clock,
   Globe,
@@ -21,9 +22,15 @@ import {
   Cpu,
   Network,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { ScanLiveLog } from '#/features/scanner/components/scan-live-log'
+import { ExpandableText } from '#/components/expandable-text'
+
+const STEPS_PER_PAGE = 10
+const CRAWL_TOOLS = ['katana_crawl', 'gau_urls', 'waybackurls_fetch']
 
 type DynamicScannerProcessProps = {
   response?: AgentLoopData | null
@@ -36,8 +43,14 @@ export default function DynamicScannerProcess({
   isLoading,
   elapsedMs = 0,
 }: DynamicScannerProcessProps) {
-  const stepsToShow = response?.steps.slice(0, 10) ?? []
-  const hasMoreSteps = response ? response.steps.length > stepsToShow.length : false
+  // Client-side pagination over the full steps array (10 per page).
+  const [stepPage, setStepPage] = useState(0)
+  const allSteps = response?.steps ?? []
+  const stepPageCount = Math.max(1, Math.ceil(allSteps.length / STEPS_PER_PAGE))
+  const currentStepPage = Math.min(stepPage, stepPageCount - 1)
+  const stepStart = currentStepPage * STEPS_PER_PAGE
+  const stepsToShow = allSteps.slice(stepStart, stepStart + STEPS_PER_PAGE)
+
   const finalAnswerText = response ? toPlainText(response.final_answer) : ''
 
   // Derived stats from steps
@@ -45,11 +58,9 @@ export default function DynamicScannerProcess({
     ? response.steps.filter((s) => s.tool === 'http_request').length
     : null
 
-  const katanaStep = response?.steps.find((s) => s.tool === 'katana_crawl')
-  const crawledCount =
-    katanaStep && typeof katanaStep.result['total_count'] === 'number'
-      ? (katanaStep.result['total_count'] as number)
-      : null
+  // URLs discovered by any crawl/enumeration tool, merged and de-duplicated.
+  const crawledUrls = response ? extractCrawledUrls(response.steps) : []
+  const crawledCount = response ? crawledUrls.length : null
 
   // Tool usage activity: count by tool name
   const toolUsage: Record<string, number> = {}
@@ -148,16 +159,16 @@ export default function DynamicScannerProcess({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-6">
-                  <div>
-                    <p className="text-muted-foreground">Total steps</p>
-                    <p className="text-lg font-semibold">{response.total_steps}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Final answer</p>
-                    <p className="text-sm whitespace-pre-wrap">{finalAnswerText}</p>
-                  </div>
+                <div>
+                  <p className="text-muted-foreground">Total steps</p>
+                  <p className="text-lg font-semibold">{response.total_steps}</p>
                 </div>
+                {finalAnswerText ? (
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-sm font-medium">Final answer</p>
+                    <ExpandableText text={finalAnswerText} />
+                  </div>
+                ) : null}
                 {stepsToShow.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Recent steps</p>
@@ -191,10 +202,40 @@ export default function DynamicScannerProcess({
                         </AccordionItem>
                       ))}
                     </Accordion>
-                    {hasMoreSteps ? (
-                      <p className="text-muted-foreground text-sm">
-                        Showing first {stepsToShow.length} of {response.steps.length} steps.
-                      </p>
+                    {allSteps.length > STEPS_PER_PAGE ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <p className="text-muted-foreground text-xs">
+                          Menampilkan {stepStart + 1}–{stepStart + stepsToShow.length} dari{' '}
+                          {allSteps.length} langkah
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={currentStepPage === 0}
+                            onClick={() => setStepPage((page) => Math.max(0, page - 1))}
+                          >
+                            <ChevronLeft className="size-3.5" />
+                            Prev
+                          </Button>
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {currentStepPage + 1} / {stepPageCount}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={currentStepPage >= stepPageCount - 1}
+                            onClick={() =>
+                              setStepPage((page) => Math.min(stepPageCount - 1, page + 1))
+                            }
+                          >
+                            Next
+                            <ChevronRight className="size-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
@@ -313,9 +354,26 @@ export default function DynamicScannerProcess({
                     <InfoRow label="IP Address" value={targetInfo.ip} mono />
                     <InfoRow label="Status" value={targetInfo.status} />
                     <InfoRow label="HTTP Code" value={String(targetInfo.status_code)} mono />
+                    <InfoRow label="Web Server" value={targetInfo.server || 'Unknown'} />
                     <InfoRow label="CDN" value={targetInfo.cdn?.toUpperCase() || 'None'} />
                     <InfoRow label="Operating System" value={targetInfo.operating_system} />
                     <InfoRow label="Page Title" value={targetInfo.title} />
+                    {targetInfo.technologies && targetInfo.technologies.length > 0 ? (
+                      <div className="border-border/60 space-y-1.5 border-t pt-2">
+                        <span className="text-muted-foreground text-xs">Technologies</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {targetInfo.technologies.map((tech) => (
+                            <Badge
+                              key={tech}
+                              variant="secondary"
+                              className="text-[10px] font-medium"
+                            >
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-sm">
@@ -427,46 +485,31 @@ export default function DynamicScannerProcess({
         <TabsContent value="reports">
           <Card>
             <CardHeader>
-              <CardTitle>Crawled Directory</CardTitle>
+              <CardTitle>URLs Crawled</CardTitle>
               <CardDescription>
-                URLs discovered by the crawler during reconnaissance.
+                Paths discovered by the crawler and URL enumeration tools during reconnaissance.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {katanaStep ? (
+              {crawledUrls.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Total URLs found:</span>
-                    <span className="font-mono font-bold">{crawledCount ?? '-'}</span>
-                    {(katanaStep.result['output_truncated'] as boolean | undefined) ? (
-                      <Badge variant="outline" className="text-xs">
-                        Preview only
-                      </Badge>
-                    ) : null}
+                    <span className="font-mono font-bold">{crawledUrls.length}</span>
                   </div>
-                  {Array.isArray(katanaStep.result['output']) ? (
-                    <div className="max-h-80 overflow-y-auto border">
-                      {(katanaStep.result['output'] as string[]).map((url, idx) => (
-                        <div
-                          key={idx}
-                          className="hover:bg-muted/30 border-b px-3 py-1.5 font-mono text-xs transition-colors last:border-b-0"
-                        >
-                          {url}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  {(katanaStep.result['output_truncated'] as boolean | undefined) ? (
-                    <p className="text-muted-foreground text-xs">
-                      Output was truncated by the backend. Showing first{' '}
-                      {(katanaStep.result['output'] as string[]).length} of {crawledCount} URLs.
-                    </p>
-                  ) : null}
+                  <div className="max-h-96 overflow-y-auto border">
+                    {crawledUrls.map((url) => (
+                      <div
+                        key={url}
+                        className="hover:bg-muted/30 border-b px-3 py-1.5 font-mono text-xs break-all transition-colors last:border-b-0"
+                      >
+                        {url}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">
-                  No crawl data available. Run a scan that includes a web crawl step.
-                </p>
+                <p className="text-muted-foreground text-sm">Belum ada URL hasil crawl.</p>
               )}
             </CardContent>
           </Card>
@@ -496,6 +539,23 @@ function formatDuration(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
+// Merges the `result.output` URL lists of every crawl/enumeration step and
+// de-duplicates them, preserving first-seen order.
+function extractCrawledUrls(steps: AgentLoopData['steps']): string[] {
+  const urls = new Set<string>()
+  for (const step of steps) {
+    if (!CRAWL_TOOLS.includes(step.tool)) continue
+    const output = step.result['output']
+    if (!Array.isArray(output)) continue
+    for (const entry of output) {
+      if (typeof entry === 'string' && entry.trim() !== '') {
+        urls.add(entry)
+      }
+    }
+  }
+  return Array.from(urls)
 }
 
 function toPlainText(value: string): string {

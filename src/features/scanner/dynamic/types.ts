@@ -47,6 +47,8 @@ export type AgentTargetInfo = {
   ip: string
   title: string
   status_code: number
+  server?: string
+  technologies?: string[]
 }
 
 export type AgentLoopData = {

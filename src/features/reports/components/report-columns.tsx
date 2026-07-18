@@ -39,39 +39,6 @@ function renderSortableHeader(column: Column<Report>, label: string) {
   )
 }
 
-// Helper to extract clean display title
-function getDisplayTitle(report: Report): string {
-  if (report.vulnerabilities && report.vulnerabilities.length > 0) {
-    const firstVuln = report.vulnerabilities[0]
-    try {
-      const path = new URL(firstVuln.location).pathname
-      return `${firstVuln.title} on ${path}`
-    } catch {
-      return firstVuln.title
-    }
-  }
-
-  const parts = report.title.split(' - ')
-  if (parts.length > 1) {
-    return parts[parts.length - 1]
-  }
-  return report.title
-}
-
-// Helper to extract clean subtitle
-function getDisplaySubtitle(report: Report): string {
-  let domain = ''
-  try {
-    domain = new URL(report.metadata.target).hostname
-  } catch {
-    domain = report.metadata.target
-  }
-  const duration = report.metadata.duration || ''
-  const date = report.created_at.split('T')[0]
-
-  return `${domain} • ${duration} • ${date}`
-}
-
 export type ReportColumnCallbacks = {
   onViewDetail: (report: Report) => void
   onDownloadPdf: (report: Report) => Promise<void>
@@ -98,27 +65,6 @@ export const getReportColumns = (
         <span className="text-muted-foreground font-mono text-xs font-bold" title={id}>
           {shortId('RPT', id)}
         </span>
-      )
-    },
-  },
-  {
-    id: 'titleSummary',
-    header: ({ column }) => renderSortableHeader(column, 'Title / Summary'),
-    cell: ({ row }) => {
-      const report = row.original
-      const mainTitle = getDisplayTitle(report)
-      const subtitle = getDisplaySubtitle(report)
-
-      return (
-        <div className="flex min-w-50 flex-col gap-0.5 py-1">
-          <span
-            className="text-foreground cursor-pointer text-sm leading-snug font-semibold hover:underline"
-            onClick={() => callbacks.onViewDetail(report)}
-          >
-            {mainTitle}
-          </span>
-          <span className="text-muted-foreground text-xs leading-normal">{subtitle}</span>
-        </div>
       )
     },
   },

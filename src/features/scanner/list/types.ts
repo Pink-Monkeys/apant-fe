@@ -15,8 +15,21 @@ export type Scan = {
   username?: string
 }
 
+export type ScansPage = {
+  scans: Scan[]
+  total: number
+  page: number
+  limit: number
+}
+
 export type ListScansResponse = {
-  data: Scan[]
+  data: ScansPage
+  message: string
+  success: boolean
+}
+
+export type ListScanTargetsResponse = {
+  data: string[]
   message: string
   success: boolean
 }
