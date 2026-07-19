@@ -1,9 +1,20 @@
 // Authenticated session attached to scan requests so pages behind a login can be
 // scanned. Mirrors the backend AuthConfig contract.
 export type AuthConfig = {
-  type: 'cookie' | 'bearer' | 'basic' | 'header'
-  value: string
+  type: 'cookie' | 'bearer' | 'basic' | 'header' | 'form'
+  // Used by cookie/bearer/basic/header. Not used by 'form', where the tools log
+  // in themselves via the fields below.
+  value?: string
   header_name?: string
+  // Fields for type 'form': the tools submit these to the target's HTML login
+  // form, capture the session cookie, then scan pages behind the login.
+  login_url?: string
+  username?: string
+  password?: string
+  verify_url?: string
+  username_field?: string
+  password_field?: string
+  success_regex?: string
 }
 
 export type AgentLoopPayload = {
