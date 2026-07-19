@@ -89,6 +89,9 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
 
       {values.method === 'basic' ? (
         <>
+          <p className="text-muted-foreground text-xs">
+            HTTP Basic Auth header (you already have header credentials).
+          </p>
           <Field data-invalid={Boolean(errors.username)}>
             <FieldLabel htmlFor="auth-username">Username</FieldLabel>
             <Input
@@ -134,6 +137,66 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
               onChange={(event) => onFieldChange('headerValue', event.target.value)}
             />
             {errors.headerValue ? <FieldError errors={[{ message: errors.headerValue }]} /> : null}
+          </Field>
+        </>
+      ) : null}
+
+      {values.method === 'form' ? (
+        <>
+          <p className="text-muted-foreground text-xs">
+            The tools log in to the target&apos;s login page themselves using the username &amp;
+            password.
+          </p>
+          <Field data-invalid={Boolean(errors.loginUrl)}>
+            <FieldLabel htmlFor="auth-login-url">Login URL (optional)</FieldLabel>
+            <Input
+              id="auth-login-url"
+              type="url"
+              inputMode="url"
+              placeholder="https://target/login.php"
+              value={values.loginUrl}
+              onChange={(event) => onFieldChange('loginUrl', event.target.value)}
+            />
+            <FieldDescription>
+              Leave empty to auto-discover the login page from the target URL above.
+            </FieldDescription>
+            {errors.loginUrl ? <FieldError errors={[{ message: errors.loginUrl }]} /> : null}
+          </Field>
+          <Field data-invalid={Boolean(errors.username)}>
+            <FieldLabel htmlFor="auth-form-username">Username</FieldLabel>
+            <Input
+              id="auth-form-username"
+              autoComplete="off"
+              value={values.username}
+              onChange={(event) => onFieldChange('username', event.target.value)}
+            />
+            {errors.username ? <FieldError errors={[{ message: errors.username }]} /> : null}
+          </Field>
+          <Field data-invalid={Boolean(errors.password)}>
+            <FieldLabel htmlFor="auth-form-password">Password</FieldLabel>
+            <Input
+              id="auth-form-password"
+              type="password"
+              autoComplete="off"
+              value={values.password}
+              onChange={(event) => onFieldChange('password', event.target.value)}
+            />
+            {errors.password ? <FieldError errors={[{ message: errors.password }]} /> : null}
+          </Field>
+          <Field data-invalid={Boolean(errors.verifyUrl)}>
+            <FieldLabel htmlFor="auth-verify-url">Verify URL</FieldLabel>
+            <Input
+              id="auth-verify-url"
+              type="url"
+              inputMode="url"
+              placeholder="https://target/index.php"
+              value={values.verifyUrl}
+              onChange={(event) => onFieldChange('verifyUrl', event.target.value)}
+            />
+            <FieldDescription>
+              Protected page to confirm login succeeded (recommended).
+            </FieldDescription>
+            {errors.verifyUrl ? <FieldError errors={[{ message: errors.verifyUrl }]} /> : null}
           </Field>
         </>
       ) : null}

@@ -29,7 +29,7 @@ export type DynamicScannerFormValues = z.infer<typeof dynamicScannerFormSchema>
 
 // ─── Authentication (optional, for scanning targets behind a login) ───────────
 
-export const AUTH_METHODS = ['none', 'cookie', 'bearer', 'basic', 'header'] as const
+export const AUTH_METHODS = ['none', 'cookie', 'bearer', 'basic', 'header', 'form'] as const
 export type AuthMethod = (typeof AUTH_METHODS)[number]
 
 export const authMethodOptions: { value: AuthMethod; label: string }[] = [
@@ -38,7 +38,17 @@ export const authMethodOptions: { value: AuthMethod; label: string }[] = [
   { value: 'bearer', label: 'Bearer Token' },
   { value: 'basic', label: 'Basic Auth' },
   { value: 'header', label: 'Custom Header' },
+  { value: 'form', label: 'Form Login' },
 ]
+
+function isValidUrl(value: string): boolean {
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
+}
 
 // Zod is the single source of truth for conditional auth validation.
 export const authValuesSchema = z
@@ -50,6 +60,11 @@ export const authValuesSchema = z
     password: z.string(),
     headerName: z.string(),
     headerValue: z.string(),
+    loginUrl: z.string(),
+    verifyUrl: z.string(),
+    usernameField: z.string(),
+    passwordField: z.string(),
+    successRegex: z.string(),
   })
   .superRefine((values, ctx) => {
     if (values.method === 'cookie' && values.cookie.trim() === '') {
@@ -83,6 +98,22 @@ export const authValuesSchema = z
         ctx.addIssue({ code: 'custom', path: ['headerValue'], message: 'Header Value is required' })
       }
     }
+
+    if (values.method === 'form') {
+      // Login URL is optional: when left empty the backend auto-discovers the login
+      // page from the target URL. Only validate its format when the user provides one.
+      if (values.loginUrl.trim() !== '' && !isValidUrl(values.loginUrl)) {
+        ctx.addIssue({ code: 'custom', path: ['loginUrl'], message: 'Invalid URL' })
+      }
+      // Note: unlike 'basic', a colon in the username is allowed here — the tools
+      // submit it to the login form, not into a "user:pass" Basic Auth string.
+      if (values.username.trim() === '') {
+        ctx.addIssue({ code: 'custom', path: ['username'], message: 'Username is required' })
+      }
+      if (values.password === '') {
+        ctx.addIssue({ code: 'custom', path: ['password'], message: 'Password is required' })
+      }
+    }
   })
 
 export type AuthFormValues = z.infer<typeof authValuesSchema>
@@ -96,6 +127,11 @@ export const defaultAuthValues: AuthFormValues = {
   password: '',
   headerName: '',
   headerValue: '',
+  loginUrl: '',
+  verifyUrl: '',
+  usernameField: '',
+  passwordField: '',
+  successRegex: '',
 }
 
 export function validateAuthValues(values: AuthFormValues): Partial<Record<AuthFieldName, string>> {
@@ -129,6 +165,17 @@ export function buildAuthConfig(values: AuthFormValues): AuthConfig | undefined 
         type: 'header',
         value: values.headerValue,
         header_name: values.headerName.trim(),
+      }
+    case 'form':
+      return {
+        type: 'form',
+        login_url: values.loginUrl.trim() || undefined,
+        username: values.username.trim(),
+        password: values.password,
+        verify_url: values.verifyUrl.trim() || undefined,
+        username_field: values.usernameField.trim() || undefined,
+        password_field: values.passwordField.trim() || undefined,
+        success_regex: values.successRegex.trim() || undefined,
       }
     default:
       return undefined
