@@ -62,9 +62,14 @@ export const getReportColumns = (
     cell: ({ row }) => {
       const id = row.original.id
       return (
-        <span className="text-muted-foreground font-mono text-xs font-bold" title={id}>
+        <button
+          type="button"
+          onClick={() => callbacks.onViewDetail(row.original)}
+          className="text-muted-foreground hover:text-primary font-mono text-xs font-bold hover:underline"
+          title={`View details for ${id}`}
+        >
           {shortId('RPT', id)}
-        </span>
+        </button>
       )
     },
   },
@@ -74,9 +79,14 @@ export const getReportColumns = (
     cell: ({ row }) => {
       const target = row.original.metadata.target
       return (
-        <span className="block max-w-37.5 truncate text-xs font-medium" title={target}>
+        <button
+          type="button"
+          onClick={() => callbacks.onViewDetail(row.original)}
+          className="hover:text-primary block max-w-37.5 truncate text-left text-xs font-medium hover:underline"
+          title={`View details for ${target}`}
+        >
           {target}
-        </span>
+        </button>
       )
     },
   },
