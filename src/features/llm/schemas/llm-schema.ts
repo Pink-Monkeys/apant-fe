@@ -57,3 +57,31 @@ export const defaultModelValues: ModelFormValues = {
   label: '',
   enabled: true,
 }
+
+export const DEFAULT_PRICE_CURRENCY = 'USD'
+
+// Parses the two price text inputs from the model form, mirroring the backend's
+// both-or-neither + non-negative rule. Returns `priced: null` when both are blank
+// (unpriced), a { in, out } pair when both are valid, or an error message when
+// only one is filled or a value is invalid/negative. A value of 0 is allowed
+// (free model).
+export function parseModelPrice(
+  inStr: string,
+  outStr: string
+): { ok: true; priced: { in: number; out: number } | null } | { ok: false; error: string } {
+  const a = inStr.trim()
+  const b = outStr.trim()
+  if (a === '' && b === '') return { ok: true, priced: null }
+  if (a === '' || b === '') {
+    return { ok: false, error: 'Set both input and output price, or leave both blank' }
+  }
+  const inNum = Number(a)
+  const outNum = Number(b)
+  if (!Number.isFinite(inNum) || !Number.isFinite(outNum)) {
+    return { ok: false, error: 'Prices must be numbers' }
+  }
+  if (inNum < 0 || outNum < 0) {
+    return { ok: false, error: 'Prices must not be negative' }
+  }
+  return { ok: true, priced: { in: inNum, out: outNum } }
+}

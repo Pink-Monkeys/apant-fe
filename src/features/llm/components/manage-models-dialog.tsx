@@ -21,7 +21,11 @@ import {
   llmProvidersQueryKey,
   updateModel,
 } from '#/features/llm/api/llm-api'
-import { modelSchema } from '#/features/llm/schemas/llm-schema'
+import {
+  DEFAULT_PRICE_CURRENCY,
+  modelSchema,
+  parseModelPrice,
+} from '#/features/llm/schemas/llm-schema'
 import type {
   AddModelPayload,
   LlmModel,
@@ -44,8 +48,12 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editModelId, setEditModelId] = useState('')
   const [editLabel, setEditLabel] = useState('')
+  const [editPriceIn, setEditPriceIn] = useState('')
+  const [editPriceOut, setEditPriceOut] = useState('')
   const [newModelId, setNewModelId] = useState('')
   const [newLabel, setNewLabel] = useState('')
+  const [newPriceIn, setNewPriceIn] = useState('')
+  const [newPriceOut, setNewPriceOut] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<LlmModel | null>(null)
 
   const invalidate = () => {
@@ -87,6 +95,8 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       invalidate()
       setNewModelId('')
       setNewLabel('')
+      setNewPriceIn('')
+      setNewPriceOut('')
       toast.success('Model added')
     },
     onError,
@@ -110,7 +120,11 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
   const startEdit = (model: LlmModel) => {
     setEditingId(model.id)
     setEditModelId(model.model_id)
-    setEditLabel(model.label)
+    // label is `omitempty` on the backend, so an empty label arrives as undefined;
+    // coerce to '' to keep the input controlled and `.trim()` safe.
+    setEditLabel(model.label ?? '')
+    setEditPriceIn(model.price_in_per_1m != null ? String(model.price_in_per_1m) : '')
+    setEditPriceOut(model.price_out_per_1m != null ? String(model.price_out_per_1m) : '')
   }
 
   const saveEdit = (model: LlmModel) => {
@@ -123,10 +137,24 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       toast.error(result.error.issues[0]?.message ?? 'Invalid input')
       return
     }
-    updateMutation.mutate({
-      modelId: model.id,
-      payload: { model_id: editModelId.trim(), label: editLabel.trim() },
-    })
+    const price = parseModelPrice(editPriceIn, editPriceOut)
+    if (!price.ok) {
+      toast.error(price.error)
+      return
+    }
+    const payload: UpdateModelPayload = {
+      model_id: editModelId.trim(),
+      label: (editLabel ?? '').trim(),
+    }
+    if (price.priced) {
+      payload.price_in_per_1m = price.priced.in
+      payload.price_out_per_1m = price.priced.out
+      payload.currency = model.currency || DEFAULT_PRICE_CURRENCY
+    } else {
+      // Both blank => clear any existing price back to unpriced.
+      payload.clear_price = true
+    }
+    updateMutation.mutate({ modelId: model.id, payload })
   }
 
   const handleAdd = () => {
@@ -135,7 +163,22 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
       toast.error(result.error.issues[0]?.message ?? 'Model ID is required')
       return
     }
-    addMutation.mutate({ model_id: newModelId.trim(), label: newLabel.trim(), enabled: true })
+    const price = parseModelPrice(newPriceIn, newPriceOut)
+    if (!price.ok) {
+      toast.error(price.error)
+      return
+    }
+    const payload: AddModelPayload = {
+      model_id: newModelId.trim(),
+      label: newLabel.trim(),
+      enabled: true,
+    }
+    if (price.priced) {
+      payload.price_in_per_1m = price.priced.in
+      payload.price_out_per_1m = price.priced.out
+      payload.currency = DEFAULT_PRICE_CURRENCY
+    }
+    addMutation.mutate(payload)
   }
 
   const models = provider?.models ?? []
@@ -173,6 +216,26 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                           value={editLabel}
                           onChange={(event) => setEditLabel(event.target.value)}
                         />
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            className="h-7"
+                            inputMode="decimal"
+                            placeholder="in $/1M"
+                            value={editPriceIn}
+                            onChange={(event) => setEditPriceIn(event.target.value)}
+                          />
+                          <Input
+                            className="h-7"
+                            inputMode="decimal"
+                            placeholder="out $/1M"
+                            value={editPriceOut}
+                            onChange={(event) => setEditPriceOut(event.target.value)}
+                          />
+                        </div>
+                        <span className="text-muted-foreground text-[10px]">
+                          Price per 1M tokens (USD). Leave both blank to clear. Check the provider
+                          dashboard for current rates.
+                        </span>
                       </div>
                     ) : (
                       <div className="flex flex-1 flex-col">
@@ -180,6 +243,7 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
                         {model.label ? (
                           <span className="text-muted-foreground">{model.label}</span>
                         ) : null}
+                        <ModelPriceLabel model={model} />
                       </div>
                     )}
 
@@ -253,23 +317,51 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
 
           <div className="border-t pt-3">
             <p className="mb-2 text-xs font-medium">Add Model Manually</p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                className="h-8"
-                placeholder="model_id (e.g. gpt-5.4)"
-                value={newModelId}
-                onChange={(event) => setNewModelId(event.target.value)}
-              />
-              <Input
-                className="h-8"
-                placeholder="label (optional)"
-                value={newLabel}
-                onChange={(event) => setNewLabel(event.target.value)}
-              />
-              <Button type="button" size="sm" disabled={addMutation.isPending} onClick={handleAdd}>
-                <Plus className="size-4" />
-                Add
-              </Button>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  className="h-8"
+                  placeholder="model_id (e.g. gpt-5.4)"
+                  value={newModelId}
+                  onChange={(event) => setNewModelId(event.target.value)}
+                />
+                <Input
+                  className="h-8"
+                  placeholder="label (optional)"
+                  value={newLabel}
+                  onChange={(event) => setNewLabel(event.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  className="h-8"
+                  inputMode="decimal"
+                  placeholder="price in $/1M (optional)"
+                  value={newPriceIn}
+                  onChange={(event) => setNewPriceIn(event.target.value)}
+                />
+                <Input
+                  className="h-8"
+                  inputMode="decimal"
+                  placeholder="price out $/1M (optional)"
+                  value={newPriceOut}
+                  onChange={(event) => setNewPriceOut(event.target.value)}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={addMutation.isPending}
+                  onClick={handleAdd}
+                >
+                  <Plus className="size-4" />
+                  Add
+                </Button>
+              </div>
+              <span className="text-muted-foreground text-[10px]">
+                Price per 1M tokens (USD), both or neither. Leave blank for an unpriced model; 0
+                marks a free model. Example format: 0.28 / 0.88 — check the provider dashboard for
+                current rates.
+              </span>
             </div>
           </div>
 
@@ -290,5 +382,25 @@ export function ManageModelsDialog({ open, onOpenChange, provider }: ManageModel
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
       />
     </>
+  )
+}
+
+// ModelPriceLabel renders a model's per-1M price, distinguishing "no price set"
+// (unpriced — cost unknowable) from a genuine "Free" (0) model.
+function ModelPriceLabel({ model }: { model: LlmModel }) {
+  const hasPrice = model.price_in_per_1m != null && model.price_out_per_1m != null
+  if (!hasPrice) {
+    return <span className="text-muted-foreground text-[10px] italic">No price set</span>
+  }
+  if (model.price_in_per_1m === 0 && model.price_out_per_1m === 0) {
+    return <span className="text-[10px] font-medium text-green-600 dark:text-green-400">Free</span>
+  }
+  const cur = model.currency || 'USD'
+  const fmt = (n: number) => (cur === 'USD' ? `$${n}` : `${n} ${cur}`)
+  return (
+    <span className="text-muted-foreground font-mono text-[10px]">
+      {fmt(model.price_in_per_1m as number)} in / {fmt(model.price_out_per_1m as number)} out · per
+      1M
+    </span>
   )
 }

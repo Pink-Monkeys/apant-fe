@@ -26,6 +26,11 @@ export type LlmModel = {
   model_id: string
   label: string
   enabled: boolean
+  // Per-1M-token prices. null/absent = unpriced (cost unknowable for scans on this
+  // model); a value of 0 is a genuinely free model. Set together or both absent.
+  price_in_per_1m?: number | null
+  price_out_per_1m?: number | null
+  currency?: string | null
 }
 
 // Provider as returned to the admin. The API key is always redacted: only
@@ -77,12 +82,23 @@ export type AddModelPayload = {
   model_id: string
   label?: string
   enabled?: boolean
+  // Optional prices. Both must be sent together (or neither). Omitting both leaves
+  // the model unpriced; 0 marks a free model.
+  price_in_per_1m?: number
+  price_out_per_1m?: number
+  currency?: string
 }
 
 export type UpdateModelPayload = {
   model_id?: string
   label?: string
   enabled?: boolean
+  // Sending both prices sets/overwrites them (0 => free). clear_price=true removes
+  // the price (back to unpriced) and wins over any supplied price.
+  price_in_per_1m?: number
+  price_out_per_1m?: number
+  currency?: string
+  clear_price?: boolean
 }
 
 // ─── Test & fetch models ──────────────────────────────────────────────────────

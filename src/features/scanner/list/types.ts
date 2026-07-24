@@ -1,5 +1,28 @@
 export type ScanStatus = 'completed' | 'running' | 'failed' | 'cancelled' | 'pending'
 
+// Derived cost view for a scan. The state distinguishes WHY a cost may be absent:
+//  - computed: price known + usage reported; `amount` is set (0 => free model)
+//  - unpriced: usage reported but the model had no price at scan start (unknowable)
+//  - no_usage: the provider reported no token usage
+//  - no_calls: the scan made no model calls (e.g. failed before any)
+export type CostState = 'computed' | 'unpriced' | 'no_usage' | 'no_calls'
+
+export type CostInfo = {
+  state: CostState
+  amount?: number
+  currency?: string
+}
+
+// Token usage shared by the list summary and the detail view. All optional since
+// scans created before token tracking (or with no model calls) omit them.
+export type TokenUsage = {
+  input_tokens?: number
+  output_tokens?: number
+  total_tokens?: number
+  calls?: number
+  cost?: CostInfo
+}
+
 export type Scan = {
   id: string
   target: string
@@ -13,7 +36,7 @@ export type Scan = {
   // Snapshot of the account that ran the scan; empty for scans created before
   // this was recorded.
   username?: string
-}
+} & TokenUsage
 
 export type ScansPage = {
   scans: Scan[]
@@ -77,7 +100,7 @@ export type ScanDetail = {
   duration: string
   created_at: string
   updated_at: string
-}
+} & TokenUsage
 
 export type ScanDetailResponse = {
   data: ScanDetail
