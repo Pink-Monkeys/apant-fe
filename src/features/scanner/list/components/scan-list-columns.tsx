@@ -10,6 +10,7 @@ import {
 } from '#/components/ui/dropdown-menu'
 import { cn, shortId } from '#/lib/utils'
 import type { Scan } from '#/features/scanner/list/types'
+import { describeCost } from '#/features/scanner/list/cost'
 
 // Helper to format sortable header buttons
 function renderSortableHeader(column: Column<Scan>, label: string) {
@@ -125,6 +126,23 @@ export const getScanColumns = (
     header: ({ column }) => renderSortableHeader(column, 'Duration'),
     cell: ({ row }) => {
       return <span className="text-xs">{row.original.duration}</span>
+    },
+  },
+  {
+    id: 'cost',
+    header: 'Cost',
+    enableSorting: false,
+    cell: ({ row }) => {
+      const cost = describeCost(row.original.cost)
+      const tokens = row.original.total_tokens
+      return (
+        <span
+          className={cn('font-mono text-xs', cost.muted && 'text-muted-foreground')}
+          title={tokens ? `${cost.title} · ${tokens.toLocaleString()} tokens` : cost.title}
+        >
+          {cost.text}
+        </span>
+      )
     },
   },
   {

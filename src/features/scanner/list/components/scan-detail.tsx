@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getScanById, scanListQueryKeys } from '#/features/scanner/list/api/scan-list-api'
 import { statusStyles } from '#/features/scanner/list/components/scan-list-columns'
-import type { ScanStep } from '#/features/scanner/list/types'
+import type { CostInfo, ScanStep } from '#/features/scanner/list/types'
+import { describeCost } from '#/features/scanner/list/cost'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
@@ -17,6 +18,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Clock,
+  Coins,
   Globe,
   Loader2,
   Server,
@@ -128,6 +130,42 @@ export function ScanDetail({ scanId }: ScanDetailProps) {
           </div>
         ) : null}
       </Section>
+
+      {/* Token Usage & Cost. Tokens are only persisted at the terminal save, so
+          while the scan is still running the record carries zeros — show a
+          placeholder instead of a misleading "0 tokens / no calls". */}
+      {scan.status === 'running' || scan.status === 'pending' ? (
+        <Section icon={<Coins className="size-4" />} title="Token Usage & Cost">
+          <div className="border-border bg-muted/10 text-muted-foreground flex items-center gap-2 border p-4 text-xs">
+            <Loader2 className="size-3.5 animate-spin" />
+            Token usage and cost are recorded when the scan finishes — they will appear here once it
+            completes.
+          </div>
+        </Section>
+      ) : scan.cost ? (
+        <Section icon={<Coins className="size-4" />} title="Token Usage & Cost">
+          <div className="border-border bg-card grid grid-cols-2 gap-3 border p-4 sm:grid-cols-5">
+            <MetaItem label="Model Calls">
+              <span className="font-mono">{scan.calls ?? 0}</span>
+            </MetaItem>
+            <MetaItem label="Input Tokens">
+              <span className="font-mono">{(scan.input_tokens ?? 0).toLocaleString()}</span>
+            </MetaItem>
+            <MetaItem label="Output Tokens">
+              <span className="font-mono">{(scan.output_tokens ?? 0).toLocaleString()}</span>
+            </MetaItem>
+            <MetaItem label="Total Tokens">
+              <span className="font-mono">{(scan.total_tokens ?? 0).toLocaleString()}</span>
+            </MetaItem>
+            <MetaItem label="Estimated Cost">
+              <CostValue cost={scan.cost} />
+            </MetaItem>
+          </div>
+          <p className="text-muted-foreground mt-2 text-[11px] leading-relaxed">
+            {costNote(scan.cost)}
+          </p>
+        </Section>
+      ) : null}
 
       {/* Target Information */}
       {scan.target_info && (
@@ -326,4 +364,35 @@ function InfoTable({ rows }: { rows: InfoRow[] }) {
 
 function formatLabel(label: string): string {
   return label.replace(/_/g, ' ')
+}
+
+function CostValue({ cost }: { cost: CostInfo }) {
+  const display = describeCost(cost)
+  return (
+    <span
+      className={cn('font-mono', display.muted && 'text-muted-foreground')}
+      title={display.title}
+    >
+      {display.text}
+    </span>
+  )
+}
+
+// costNote explains the cost state in one plain sentence, so a reader knows why a
+// cost is a number, zero, or absent.
+function costNote(cost: CostInfo): string {
+  switch (cost.state) {
+    case 'computed':
+      return (cost.amount ?? 0) === 0
+        ? 'Free model: the price is configured as 0, so the run cost is a genuine zero.'
+        : 'Estimated from the price frozen onto this scan at start × the tokens used — immune to later price edits.'
+    case 'unpriced':
+      return 'The model had no price configured when this scan started, so its cost cannot be reconstructed. Set a price in LLM provider management for future scans.'
+    case 'no_usage':
+      return 'The provider did not report any token usage for this run, so no cost can be computed.'
+    case 'no_calls':
+      return 'This scan made no model calls (it ended during deterministic recon or failed before any call).'
+    default:
+      return ''
+  }
 }
