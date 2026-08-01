@@ -118,6 +118,9 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                     <Input
                       id={field.name}
                       name={field.name}
+                      autoComplete="off"
+                      data-1p-ignore
+                      data-lpignore="true"
                       placeholder="jane.doe"
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
