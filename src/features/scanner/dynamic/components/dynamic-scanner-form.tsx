@@ -279,6 +279,8 @@ export default function DynamicScannerForm() {
                         type="url"
                         placeholder="https://yourtarget.com"
                         autoComplete="url"
+                        data-1p-ignore
+                        data-lpignore="true"
                         autoFocus
                         inputMode="url"
                         value={field.state.value ?? ''}

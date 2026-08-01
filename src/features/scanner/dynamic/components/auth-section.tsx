@@ -96,7 +96,10 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
             <FieldLabel htmlFor="auth-username">Username</FieldLabel>
             <Input
               id="auth-username"
+              name="auth-username"
               autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
               value={values.username}
               onChange={(event) => onFieldChange('username', event.target.value)}
             />
@@ -105,10 +108,16 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
           </Field>
           <Field data-invalid={Boolean(errors.password)}>
             <FieldLabel htmlFor="auth-password">Password</FieldLabel>
+            {/* new-password (not off, which Chrome ignores) keeps the browser from
+                treating this as a login form and autofilling saved credentials into
+                the target URL field above. */}
             <Input
               id="auth-password"
+              name="auth-password"
               type="password"
-              autoComplete="off"
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
               value={values.password}
               onChange={(event) => onFieldChange('password', event.target.value)}
             />
@@ -166,7 +175,10 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
             <FieldLabel htmlFor="auth-form-username">Username</FieldLabel>
             <Input
               id="auth-form-username"
+              name="auth-form-username"
               autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
               value={values.username}
               onChange={(event) => onFieldChange('username', event.target.value)}
             />
@@ -176,8 +188,11 @@ export function AuthSection({ values, errors, onMethodChange, onFieldChange }: A
             <FieldLabel htmlFor="auth-form-password">Password</FieldLabel>
             <Input
               id="auth-form-password"
+              name="auth-form-password"
               type="password"
-              autoComplete="off"
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
               value={values.password}
               onChange={(event) => onFieldChange('password', event.target.value)}
             />

@@ -142,6 +142,9 @@ export function ProviderFormDialog({
                     <Input
                       id={field.name}
                       name={field.name}
+                      autoComplete="off"
+                      data-1p-ignore
+                      data-lpignore="true"
                       placeholder="OpenAI"
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
@@ -194,7 +197,9 @@ export function ProviderFormDialog({
                       id={field.name}
                       name={field.name}
                       type="password"
-                      autoComplete="off"
+                      autoComplete="new-password"
+                      data-1p-ignore
+                      data-lpignore="true"
                       placeholder={isEdit ? 'Leave empty to keep the current key' : 'sk-...'}
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
