@@ -11,8 +11,9 @@ import {
 } from '#/components/ui/dialog'
 import { Button } from '#/components/ui/button'
 import { Checkbox } from '#/components/ui/checkbox'
+import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Search } from 'lucide-react'
 import {
   addModel,
   llmOptionsQueryKey,
@@ -35,6 +36,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
   const queryClient = useQueryClient()
   const [result, setResult] = useState<TestProviderResponse | null>(null)
   const [selected, setSelected] = useState<Record<string, boolean>>({})
+  const [search, setSearch] = useState('')
 
   const existingModelIds = new Set(provider?.models.map((model) => model.model_id) ?? [])
 
@@ -44,6 +46,7 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
     if (open) {
       setResult(null)
       setSelected({})
+      setSearch('')
     }
   }, [open, provider?.id])
 
@@ -86,6 +89,12 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
   const selectedIds = availableModels.filter(
     (modelId) => selected[modelId] && !existingModelIds.has(modelId)
   )
+  // Filter only affects what is shown; selections made under a previous query
+  // are preserved because selectedIds derives from the full list, not this one.
+  const query = search.trim().toLowerCase()
+  const filteredModels = query
+    ? availableModels.filter((modelId) => modelId.toLowerCase().includes(query))
+    : availableModels
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,30 +125,47 @@ export function TestModelsDialog({ open, onOpenChange, provider }: TestModelsDia
 
           {result ? (
             availableModels.length > 0 ? (
-              <div className="flex max-h-64 flex-col gap-2 overflow-y-auto border p-3">
-                {availableModels.map((modelId) => {
-                  const alreadyAdded = existingModelIds.has(modelId)
-                  return (
-                    <Label
-                      key={modelId}
-                      className="flex items-center gap-2 text-xs font-normal"
-                      htmlFor={`model-${modelId}`}
-                    >
-                      <Checkbox
-                        id={`model-${modelId}`}
-                        checked={alreadyAdded || Boolean(selected[modelId])}
-                        disabled={alreadyAdded}
-                        onCheckedChange={(checked) =>
-                          setSelected((prev) => ({ ...prev, [modelId]: checked === true }))
-                        }
-                      />
-                      <span className="font-mono">{modelId}</span>
-                      {alreadyAdded ? (
-                        <span className="text-muted-foreground">(already added)</span>
-                      ) : null}
-                    </Label>
-                  )
-                })}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+                  <Input
+                    className="h-8 pl-8"
+                    placeholder="Search models..."
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </div>
+                {filteredModels.length > 0 ? (
+                  <div className="flex max-h-64 flex-col gap-2 overflow-y-auto border p-3">
+                    {filteredModels.map((modelId) => {
+                      const alreadyAdded = existingModelIds.has(modelId)
+                      return (
+                        <Label
+                          key={modelId}
+                          className="flex items-center gap-2 text-xs font-normal"
+                          htmlFor={`model-${modelId}`}
+                        >
+                          <Checkbox
+                            id={`model-${modelId}`}
+                            checked={alreadyAdded || Boolean(selected[modelId])}
+                            disabled={alreadyAdded}
+                            onCheckedChange={(checked) =>
+                              setSelected((prev) => ({ ...prev, [modelId]: checked === true }))
+                            }
+                          />
+                          <span className="font-mono">{modelId}</span>
+                          {alreadyAdded ? (
+                            <span className="text-muted-foreground">(already added)</span>
+                          ) : null}
+                        </Label>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    No models match &quot;{search}&quot;.
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-muted-foreground text-xs">
